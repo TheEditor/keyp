@@ -1,0 +1,40 @@
+{
+  "name": "@theeditor/keyp",
+  "version": "0.0.1",
+  "publishConfig": {
+    "access": "public"
+  },
+  "description": "Local-first secret manager for developers",
+  "main": "index.js",
+  "bin": {
+    "keyp": "./bin/keyp.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "secrets",
+    "secret-manager",
+    "cli",
+    "password-manager",
+    "security",
+    "encryption",
+    "developer-tools",
+    "local-first",
+    "api-keys",
+    "credentials"
+  ],
+  "author": "Dave Fobare <dave.fobare@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TheEditor/keyp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TheEditor/keyp/issues"
+  },
+  "homepage": "https://github.com/TheEditor/keyp#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
