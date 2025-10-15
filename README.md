@@ -1,6 +1,7 @@
 # keyp
 
-> Local-first secret manager for developers
+> Local-first secret manager for developers  
+> *"pass for the Node.js generation"*
 
 🚧 **Under Active Development** 🚧
 
@@ -46,21 +47,10 @@ Unlike enterprise secret managers (too complex) or traditional Unix password man
 - ✅ No team features bloat
 - ✅ Just simple, secure secret storage
 
-**Positioning:** "pass for the Node.js generation"
-
-## Status
-
-Currently in active development. Expected timeline:
-
-- **Week 1**: Core encryption + vault management
-- **Week 2**: CLI commands (init, set, get, list)
-- **Week 3**: Git sync + polish
-- **Week 4**: v1.0.0 launch
-
-## Installation (Not Yet Available)
+## Installation
 
 ```bash
-npm install -g keyp
+npm install -g @theeditor/keyp
 ```
 
 ## Development
@@ -100,7 +90,7 @@ Inspired by [pass](https://www.passwordstore.org/) but designed for modern Node.
 
 ## License
 
-MIT © [Dave Fobare]
+MIT © Dave Fobare
 
 ---
 
