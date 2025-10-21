@@ -4,7 +4,7 @@
 
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { encrypt, decrypt, deriveKey, verifyPassword, EncryptionResult } from './crypto';
+import { encrypt, decrypt, deriveKey, verifyPassword, EncryptionResult } from './crypto.js';
 
 test('Crypto Module', async (t) => {
   await t.test('deriveKey generates consistent keys for same password and salt', () => {

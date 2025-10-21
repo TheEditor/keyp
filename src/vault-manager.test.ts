@@ -7,8 +7,8 @@ import * as assert from 'node:assert/strict';
 import { rmSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { VaultManager } from './vault-manager';
-import { SecretsManager } from './secrets';
+import { VaultManager } from './vault-manager.js';
+import { SecretsManager } from './secrets.js';
 
 // Create a temporary directory for test vaults
 const testVaultDir = join(tmpdir(), `keyp-test-${Date.now()}`);

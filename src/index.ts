@@ -3,8 +3,8 @@
  * Core library exports
  */
 
-export * from './crypto';
-export * from './types';
-export * from './config';
-export * from './vault-manager';
-export * from './secrets';
+export * from './crypto.js';
+export * from './types.js';
+export * from './config.js';
+export * from './vault-manager.js';
+export * from './secrets.js';

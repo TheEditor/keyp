@@ -15,15 +15,20 @@
 - ✅ PBKDF2 key derivation with secure salts
 - ✅ Encrypted vault file format
 - ✅ Vault initialization and management
-- ✅ Secret CRUD operations (in-memory)
+- ✅ Secret CRUD operations
 - ✅ Comprehensive test suite (39 tests, all passing)
 - ✅ Security and format documentation
 
-**🚧 Week 2: CLI Commands** (coming soon)
-- `keyp init` - Initialize vault
-- `keyp set` - Store secrets
-- `keyp get` - Retrieve secrets
-- `keyp list` - List all secrets
+**✅ Week 2 Complete: CLI Commands**
+
+- ✅ `keyp init` - Initialize vault
+- ✅ `keyp set` - Store secrets
+- ✅ `keyp get` - Retrieve secrets (clipboard support)
+- ✅ `keyp list` - List all secrets
+- ✅ `keyp delete` - Delete secrets
+- ✅ Beautiful terminal UI with colors and formatting
+- ✅ Masked password input for security
+- ✅ All core commands tested and working
 
 ## Features
 
@@ -34,24 +39,51 @@
 - 🔧 **Developer-friendly** - Script integration, clipboard support
 - 🆓 **Free & open source** - MIT license
 
-## Planned Commands
+## Quick Start
 
+### Initialize your vault
 ```bash
-# Initialize vault
-keyp init
+$ keyp init
+Enter master password: ●●●●●●●●
+Confirm master password: ●●●●●●●●
+✓ Vault initialized successfully!
+```
 
-# Store a secret
-keyp set github-token
-# Enter value: ●●●●●●●●
+### Store a secret
+```bash
+$ keyp set github-token
+Enter master password: ●●●●●●●●
+Enter value for "github-token": ●●●●●●●●
+Enter master password to save: ●●●●●●●●
+✓ Secret "github-token" saved
+```
 
-# Retrieve a secret (copies to clipboard)
-keyp get github-token
+### Retrieve a secret (copies to clipboard)
+```bash
+$ keyp get github-token
+Enter master password: ●●●●●●●●
+✓ Copied to clipboard (clears in 45 seconds)
+```
 
-# List all secrets
-keyp list
+### List all secrets
+```bash
+$ keyp list
+Enter master password: ●●●●●●●●
 
-# Sync across machines
-keyp sync
+  • api-key
+  • database-url
+  • github-token
+
+3 secrets stored
+```
+
+### Delete a secret
+```bash
+$ keyp delete github-token -f
+Enter master password: ●●●●●●●●
+Delete secret "github-token"? (y/N): y
+✓ Secret "github-token" deleted
+Remaining secrets: 2
 ```
 
 ## Why keyp?
@@ -81,35 +113,42 @@ npm install
 
 ## Documentation
 
-- 📖 **[API Reference](./docs/API.md)** - Complete library API with examples
+- 📖 **[CLI Reference](./docs/CLI.md)** - Command-line interface guide
+- 🔧 **[API Reference](./docs/API.md)** - Library API with examples
 - 🔐 **[Security Guide](./docs/SECURITY.md)** - Cryptographic details and threat model
-- 📋 **[Vault Format](./docs/VAULT_FORMAT.md)** - Technical specification of vault file structure
+- 📋 **[Vault Format](./docs/VAULT_FORMAT.md)** - Technical vault file specification
 
 ## Roadmap
 
 **Week 1: Core encryption + vault management** ✅
 - [x] Core encryption implementation (AES-256-GCM)
+- [x] PBKDF2 key derivation with 100,000+ iterations
 - [x] Vault initialization and management
 - [x] Secret CRUD operations
-- [x] Comprehensive tests (39 passing)
-- [x] Security documentation
+- [x] Comprehensive tests (39 passing, 100%)
+- [x] Security and vault format documentation
 
-**Week 2: CLI Commands** 🚧
-- [ ] Beautiful CLI with colors and prompts
-- [ ] `keyp init` command
-- [ ] `keyp set` / `keyp get` commands
-- [ ] `keyp list` command
+**Week 2: CLI Commands** ✅
+- [x] Beautiful CLI with colors and formatting
+- [x] `keyp init` - Initialize vault with password prompts
+- [x] `keyp set <name> [value]` - Store secrets
+- [x] `keyp get <name>` - Retrieve secrets to clipboard
+- [x] `keyp list` - List all secrets with search
+- [x] `keyp delete <name>` - Delete secrets (bonus)
+- [x] Masked password input for security
+- [x] Clipboard auto-clear after 45 seconds
 
 **Week 3: Git sync + polish** 📅
 - [ ] Git integration for encrypted backups
-- [ ] Clipboard support with auto-clear
-- [ ] Secret categories and search
-- [ ] Error handling refinement
+- [ ] `keyp sync` command
+- [ ] Enhanced error messages
+- [ ] Shell completion scripts
+- [ ] Password strength recommendations
 
 **Week 4: v1.0.0 launch** 📅
-- [ ] Full documentation and examples
+- [ ] Complete documentation and examples
 - [ ] Launch announcement
-- [ ] Community feedback
+- [ ] Community feedback and iteration
 
 ## Philosophy
 

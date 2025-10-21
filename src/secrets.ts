@@ -2,7 +2,7 @@
  * Secret management - CRUD operations for vault secrets
  */
 
-import { VaultData } from './types';
+import { VaultData } from './types.js';
 
 /**
  * SecretsManager handles all secret operations (Create, Read, Update, Delete)

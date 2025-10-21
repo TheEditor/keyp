@@ -3,9 +3,9 @@
  */
 
 import { readFileSync, writeFileSync } from 'fs';
-import { encrypt, decrypt, EncryptionResult } from './crypto';
-import { VaultFile, VaultData, CryptoConfig } from './types';
-import { getVaultPath, vaultExists, DEFAULT_CONFIG, ensureKeypDirExists } from './config';
+import { encrypt, decrypt, EncryptionResult } from './crypto.js';
+import { VaultFile, VaultData, CryptoConfig } from './types.js';
+import { getVaultPath, vaultExists, DEFAULT_CONFIG, ensureKeypDirExists } from './config.js';
 
 /**
  * VaultManager handles all vault lifecycle operations
