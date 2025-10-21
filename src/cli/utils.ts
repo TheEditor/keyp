@@ -201,42 +201,106 @@ export function printSecretList(secrets: string[]): void {
 }
 
 /**
- * Validates password strength and returns feedback
+ * Calculates password entropy and returns approximate bits of entropy
+ *
+ * @param password - Password to analyze
+ * @returns Number of entropy bits
+ */
+function calculateEntropy(password: string): number {
+  let charsetSize = 0;
+
+  if (/[a-z]/.test(password)) charsetSize += 26;
+  if (/[A-Z]/.test(password)) charsetSize += 26;
+  if (/[0-9]/.test(password)) charsetSize += 10;
+  if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) charsetSize += 32;
+
+  return Math.log2(Math.pow(charsetSize, password.length));
+}
+
+/**
+ * Validates password strength and returns detailed feedback with visual indicator
  *
  * @param password - Password to validate
- * @returns Object with isStrong and feedback message
+ * @returns Object with isStrong, strength score, and detailed feedback
  */
-export function validatePasswordStrength(password: string): { isStrong: boolean; feedback: string } {
+export function validatePasswordStrength(password: string): {
+  isStrong: boolean;
+  feedback: string;
+  score: number;
+  meter: string;
+} {
   const issues: string[] = [];
+  const strengths: string[] = [];
+  let score = 0;
 
+  // Check minimum length
   if (password.length < 8) {
-    issues.push('at least 8 characters');
+    issues.push('Increase length to at least 8 characters');
+  } else if (password.length < 12) {
+    issues.push('Increase length to 12+ characters for better security');
+  } else {
+    strengths.push(`Good length (${password.length} characters)`);
   }
 
-  if (password.length < 12) {
-    issues.push('consider 12+ characters for better security');
-  }
-
+  // Check for uppercase
   if (!/[A-Z]/.test(password)) {
-    issues.push('mix in uppercase letters');
+    issues.push('Add uppercase letters (A-Z)');
+  } else {
+    strengths.push('Uppercase letters included');
   }
 
+  // Check for lowercase
   if (!/[a-z]/.test(password)) {
-    issues.push('mix in lowercase letters');
+    issues.push('Add lowercase letters (a-z)');
+  } else {
+    strengths.push('Lowercase letters included');
   }
 
+  // Check for numbers
   if (!/[0-9]/.test(password)) {
-    issues.push('add some numbers');
+    issues.push('Add numbers (0-9)');
+  } else {
+    strengths.push('Numbers included');
   }
 
+  // Check for special characters
   if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-    issues.push('add special characters');
+    issues.push('Add special characters (!@#$%^&*)');
+  } else {
+    strengths.push('Special characters included');
   }
 
-  const isStrong = issues.length <= 1; // Allow one weakness
-  const feedback = issues.length === 0 ? 'Strong password!' : `Consider: ${issues.join(', ')}`;
+  // Calculate entropy-based score
+  const entropy = calculateEntropy(password);
+  score = Math.min(100, Math.floor((entropy / 50) * 100)); // 50 bits = 100 score
 
-  return { isStrong, feedback };
+  // Determine if strong (75+ score or no critical issues)
+  const isStrong = score >= 75 || issues.length <= 1;
+
+  // Create visual strength meter
+  const barLength = 10;
+  const filledLength = Math.floor((score / 100) * barLength);
+  const meter = chalk.green('█'.repeat(filledLength)) + chalk.gray('░'.repeat(barLength - filledLength));
+
+  // Build feedback string
+  let feedbackLines: string[] = [];
+  feedbackLines.push(`Strength: ${meter} ${score}%`);
+
+  if (strengths.length > 0) {
+    for (const strength of strengths) {
+      feedbackLines.push(chalk.green(`  ✓ ${strength}`));
+    }
+  }
+
+  if (issues.length > 0) {
+    for (const issue of issues) {
+      feedbackLines.push(chalk.yellow(`  ✗ ${issue}`));
+    }
+  }
+
+  const feedback = feedbackLines.join('\n');
+
+  return { isStrong, feedback, score, meter };
 }
 
 /**

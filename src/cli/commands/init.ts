@@ -6,6 +6,7 @@ import chalk from 'chalk';
 import { VaultManager } from '../../vault-manager.js';
 import {
   confirmPassword,
+  confirm,
   printSuccess,
   printError,
   printWarning,
@@ -41,16 +42,20 @@ export async function initCommand(): Promise<void> {
       process.exit(1);
     }
 
-    // Validate password strength
-    const { isStrong, feedback } = validatePasswordStrength(password);
-
-    if (!isStrong) {
-      printWarning(`Password is weak: ${feedback}`);
-    } else {
-      printInfo(`Password strength: ${feedback}`);
-    }
+    // Validate password strength with enhanced feedback
+    const strengthResult = validatePasswordStrength(password);
 
     console.log('');
+    console.log(strengthResult.feedback);
+    console.log('');
+
+    if (!strengthResult.isStrong) {
+      const shouldContinue = await confirm('Continue with this password?');
+      if (!shouldContinue) {
+        printInfo('Please create a stronger password');
+        return;
+      }
+    }
 
     // Initialize vault
     const result = manager.initializeVault(password);

@@ -19,6 +19,9 @@ import { renameCommand } from './commands/rename.js';
 import { copyCommand } from './commands/copy.js';
 import { exportCommand } from './commands/export.js';
 import { importCommand } from './commands/import.js';
+import { createSyncCommand } from './commands/sync.js';
+import { statsCommand } from './commands/stats.js';
+import { configCommand } from './commands/config.js';
 import { printBanner } from './utils.js';
 
 // Load package.json in ESM context
@@ -185,6 +188,41 @@ function createProgram(): Command {
     });
 
   /**
+   * keyp sync - Git synchronization
+   */
+  program.addCommand(createSyncCommand());
+
+  /**
+   * keyp stats - Display vault statistics
+   */
+  program
+    .command('stats')
+    .description('Display vault statistics')
+    .action(async () => {
+      try {
+        await statsCommand();
+      } catch (error) {
+        console.error(chalk.red('Fatal error:', error instanceof Error ? error.message : String(error)));
+        process.exit(1);
+      }
+    });
+
+  /**
+   * keyp config - Manage configuration
+   */
+  program
+    .command('config [action] [key] [value]')
+    .description('Manage vault configuration settings')
+    .action(async (action?: string, key?: string, value?: string) => {
+      try {
+        await configCommand(action, key, value);
+      } catch (error) {
+        console.error(chalk.red('Fatal error:', error instanceof Error ? error.message : String(error)));
+        process.exit(1);
+      }
+    });
+
+  /**
    * Help command with banner
    */
   program.on('--help', () => {
@@ -199,6 +237,12 @@ function createProgram(): Command {
     console.log(chalk.gray('  $ keyp delete github-token     Delete a secret'));
     console.log(chalk.gray('  $ keyp export secrets.json     Export secrets'));
     console.log(chalk.gray('  $ keyp import secrets.json     Import secrets'));
+    console.log(chalk.gray('  $ keyp sync init <url>         Initialize Git sync'));
+    console.log(chalk.gray('  $ keyp sync push               Push to remote'));
+    console.log(chalk.gray('  $ keyp sync pull               Pull from remote'));
+    console.log(chalk.gray('  $ keyp stats                   Show vault statistics'));
+    console.log(chalk.gray('  $ keyp config                  Show configuration'));
+    console.log(chalk.gray('  $ keyp config set key value    Set configuration value'));
     console.log('');
     console.log(chalk.gray('Documentation:'));
     console.log(chalk.gray('  https://github.com/TheEditor/keyp'));

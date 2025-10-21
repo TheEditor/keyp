@@ -26,9 +26,22 @@
 - ✅ `keyp get` - Retrieve secrets (clipboard support)
 - ✅ `keyp list` - List all secrets
 - ✅ `keyp delete` - Delete secrets
+- ✅ `keyp rename` / `keyp copy` - Manage secrets
+- ✅ `keyp export` / `keyp import` - Backup and migrate
 - ✅ Beautiful terminal UI with colors and formatting
 - ✅ Masked password input for security
 - ✅ All core commands tested and working
+
+**✅ Week 3 Complete: Git sync + polish**
+
+- ✅ Git integration for encrypted backups
+- ✅ `keyp sync` command (init, push, pull, status, config)
+- ✅ Enhanced password strength validation with visual meter
+- ✅ Shell completion scripts (bash and zsh)
+- ✅ `keyp stats` - Vault statistics and encryption info
+- ✅ `keyp config` - Configuration management
+- ✅ Comprehensive Git sync documentation
+- ✅ All 39 tests passing with new features
 
 ## Features
 
@@ -114,6 +127,7 @@ npm install
 ## Documentation
 
 - 📖 **[CLI Reference](./docs/CLI.md)** - Command-line interface guide
+- 🌐 **[Git Sync Guide](./docs/GIT_SYNC.md)** - Multi-machine sync and encrypted backups
 - 🔧 **[API Reference](./docs/API.md)** - Library API with examples
 - 🔐 **[Security Guide](./docs/SECURITY.md)** - Cryptographic details and threat model
 - 📋 **[Vault Format](./docs/VAULT_FORMAT.md)** - Technical vault file specification
@@ -138,17 +152,21 @@ npm install
 - [x] Masked password input for security
 - [x] Clipboard auto-clear after 45 seconds
 
-**Week 3: Git sync + polish** 📅
-- [ ] Git integration for encrypted backups
-- [ ] `keyp sync` command
-- [ ] Enhanced error messages
-- [ ] Shell completion scripts
-- [ ] Password strength recommendations
+**Week 3: Git sync + polish** ✅
+- [x] Git integration for encrypted backups
+- [x] `keyp sync init/push/pull/status/config` commands
+- [x] Enhanced password strength validation with visual meter
+- [x] Shell completion scripts (bash and zsh)
+- [x] `keyp stats` - Vault statistics command
+- [x] `keyp config` - Configuration management
+- [x] Comprehensive Git sync and CLI documentation
 
 **Week 4: v1.0.0 launch** 📅
 - [ ] Complete documentation and examples
 - [ ] Launch announcement
 - [ ] Community feedback and iteration
+- [ ] Performance optimization
+- [ ] Additional platform support
 
 ## Philosophy
 

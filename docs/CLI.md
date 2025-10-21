@@ -876,6 +876,247 @@ $ chmod 600 ~/.keyp/vault.json
 
 ---
 
+### keyp sync <subcommand>
+
+Synchronize your vault with Git remote repositories for encrypted backups.
+
+**Subcommands:**
+
+#### keyp sync init <remote-url>
+
+Initialize Git synchronization with a remote repository.
+
+**Usage:**
+```bash
+keyp sync init https://github.com/username/backup.git
+keyp sync init git@github.com:username/backup.git --auto-push
+```
+
+**Options:**
+- `-a, --auto-push` - Enable automatic push on vault changes
+- `-c, --auto-commit` - Enable automatic commit on vault changes
+
+**Example:**
+```bash
+$ keyp sync init https://github.com/user/keyp-backup.git
+ℹ Initializing Git sync...
+✓ Git repository initialized
+✓ Remote configured: https://github.com/user/keyp-backup.git
+✓ Git sync initialized successfully!
+```
+
+#### keyp sync push
+
+Push encrypted vault to remote repository.
+
+**Usage:**
+```bash
+keyp sync push
+keyp sync push -m "Updated production API key"
+```
+
+**Options:**
+- `-m, --message <message>` - Custom commit message
+
+#### keyp sync pull
+
+Pull vault from remote repository with conflict detection.
+
+**Usage:**
+```bash
+keyp sync pull
+keyp sync pull --strategy keep-local --auto-resolve
+```
+
+**Options:**
+- `-s, --strategy <strategy>` - Conflict resolution (`keep-local` or `keep-remote`)
+- `--auto-resolve` - Automatically resolve conflicts
+
+#### keyp sync status
+
+Display current Git sync status.
+
+**Usage:**
+```bash
+$ keyp sync status
+Status: ✓ Synced
+Last sync: 2h ago
+Uncommitted changes: No
+Unpushed commits: 0
+Conflicts: 0
+```
+
+#### keyp sync config
+
+View or configure Git sync settings.
+
+**Usage:**
+```bash
+keyp sync config                      # Show current settings
+keyp sync config --auto-push true     # Enable auto-push
+keyp sync config --auto-commit false  # Disable auto-commit
+```
+
+**For detailed Git sync guide:** See [Git Sync Documentation](./GIT_SYNC.md)
+
+---
+
+### keyp stats
+
+Display vault statistics and encryption information.
+
+**Usage:**
+```bash
+keyp stats
+```
+
+**Example:**
+```bash
+$ keyp stats
+Enter master password: ●●●●●●●●
+
+📊 Vault Statistics
+────────────────────────────────────
+
+Secrets
+  Total: 42
+  Average value length: 68 characters
+  Longest name: database_connection_string
+
+Storage
+  Vault file size: 12.34 KB
+  Location: ~/.keyp/vault.json
+
+Dates
+  Last modified: 10/20/2025, 3:45:00 PM
+  Last synced: 2h ago
+
+Encryption
+  Algorithm: AES-256-GCM
+  Key derivation: PBKDF2-SHA256
+  Iterations: 100,000+
+```
+
+**Information displayed:**
+- Total number of secrets
+- Average secret value length
+- Longest secret name
+- Vault file size
+- Last modified date
+- Last sync date (if Git sync configured)
+- Encryption algorithm and parameters
+
+---
+
+### keyp config [action] [key] [value]
+
+Manage keyp configuration settings.
+
+**Usage:**
+```bash
+keyp config                           # Show all settings
+keyp config list                      # Show all settings
+keyp config get <key>                 # Get specific setting
+keyp config set <key> <value>         # Set a configuration
+keyp config reset                     # Reset to defaults
+```
+
+**Configuration Keys:**
+
+- `clipboard-timeout` - How long before clipboard is auto-cleared (seconds, default: 45)
+- `auto-lock` - Auto-lock vault after inactivity (seconds, or "none" to disable)
+- `git-auto-sync` - Automatically push on vault changes (true/false)
+
+**Examples:**
+```bash
+# View current configuration
+$ keyp config
+⚙️  Keyp Configuration
+────────────────────────────────────
+
+Clipboard
+  Timeout: 45 seconds
+  (how long before clipboard is auto-cleared)
+
+Vault
+  Auto-lock: disabled
+  (lock vault after inactivity)
+
+Git Sync
+  Auto-sync: disabled
+  (automatically push on vault changes)
+
+Configuration stored in: ~/.keyp/.keyp-config.json
+
+# Change clipboard timeout
+$ keyp config set clipboard-timeout 60
+✓ Clipboard timeout set to 60 seconds
+
+# Get specific value
+$ keyp config get clipboard-timeout
+60
+
+# Enable auto-sync
+$ keyp config set git-auto-sync true
+✓ Git auto-sync enabled
+
+# Reset to defaults
+$ keyp config reset
+✓ Configuration reset to defaults
+```
+
+**Default Values:**
+```json
+{
+  "clipboardTimeout": 45,
+  "autoLock": null,
+  "gitAutoSync": false
+}
+```
+
+---
+
+## Shell Completion
+
+Enable tab completion for faster command entry.
+
+### Bash
+
+```bash
+# Add to ~/.bashrc or ~/.bash_profile
+source /path/to/keyp/completions/keyp.bash
+
+# Or manually enable
+complete -o bashdefault -o default -o nospace -F _keyp_completion keyp
+```
+
+### Zsh
+
+```bash
+# Add to ~/.zshrc
+fpath=(/path/to/keyp/completions $fpath)
+autoload -U compinit && compinit
+
+# Or copy completion file to zsh directory
+cp /path/to/keyp/completions/keyp.zsh ~/.zsh/completions/_keyp
+```
+
+### Features
+
+- Command name completion
+- Secret name completion (for get, delete, rename, copy)
+- Flag and option completion
+- File path completion (for export/import)
+
+**Example:**
+```bash
+keyp get git<TAB>     # Completes to: keyp get github-token
+keyp list --se<TAB>   # Completes to: keyp list --search
+keyp sync pull -s<TAB> # Completes to: keyp sync pull --strategy
+```
+
+---
+
 ## Getting Help
 
 ### Available Commands
@@ -890,6 +1131,7 @@ $ keyp init --help     # Help for specific command
 - 📖 [Full API Reference](./API.md)
 - 🔐 [Security Guide](./SECURITY.md)
 - 📋 [Vault Format](./VAULT_FORMAT.md)
+- 🌐 [Git Sync Guide](./GIT_SYNC.md)
 
 ### Report Issues
 
