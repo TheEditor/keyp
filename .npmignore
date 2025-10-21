@@ -1,0 +1,40 @@
+# Source files
+src/
+*.ts
+
+# Tests
+*.test.js
+*.test.ts
+
+# Development
+node_modules/
+.git/
+.github/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+tsconfig.json
+.prettierrc
+.eslintrc.json
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Development only
+dev/
+.claude/
+*.local.json
+
+# Temporary files
+*.tmp
+.temp/

@@ -108,20 +108,132 @@ Unlike enterprise secret managers (too complex) or traditional Unix password man
 - ✅ No team features bloat
 - ✅ Just simple, secure secret storage
 
-## Installation
+## Getting Started
+
+### 1. Install keyp
 
 ```bash
 npm install -g @theeditor/keyp
 ```
 
+Verify installation:
+```bash
+keyp --version
+```
+
+### 2. Create your vault
+
+```bash
+keyp init
+```
+
+You'll be prompted to create a master password. This is the only password you need to remember.
+
+### 3. Store your first secret
+
+```bash
+keyp set github-token your-token-here
+keyp set api-key sk_live_abc123xyz
+keyp set db-password secure-password
+```
+
+### 4. View all secrets
+
+```bash
+keyp list
+```
+
+### 5. Retrieve a secret
+
+```bash
+keyp get github-token
+# Copied to clipboard! (auto-clears in 45 seconds)
+```
+
+### 6. (Optional) Sync to GitHub
+
+```bash
+# Initialize Git sync
+keyp sync init https://github.com/username/keyp-backup.git
+
+# Push your vault
+keyp sync push
+
+# On another machine, pull to sync
+keyp sync pull
+```
+
+## Installation
+
+### Via npm (Recommended)
+
+```bash
+npm install -g @theeditor/keyp
+```
+
+### Requirements
+
+- Node.js 18.0.0 or higher
+- npm 8.0.0 or higher
+
+### Platform Support
+
+- ✅ macOS (Intel & Apple Silicon)
+- ✅ Linux (Ubuntu, Fedora, Arch, Debian, etc.)
+- ✅ Windows (10/11, including WSL)
+- ✅ WSL (Windows Subsystem for Linux)
+
+### Clipboard Tools
+
+On Linux, install clipboard tools for clipboard support:
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install xclip
+
+# Fedora
+sudo dnf install xclip
+
+# Arch
+sudo pacman -S xclip
+```
+
+Or use `--stdout` flag to display in terminal instead.
+
 ## Development
 
-Want to contribute? Watch this repo for updates!
+Want to contribute to keyp? We welcome contributions!
+
+### Local Development Setup
 
 ```bash
 git clone https://github.com/TheEditor/keyp.git
 cd keyp
 npm install
+npm run build
+npm test
+```
+
+### Development Commands
+
+```bash
+npm run build          # Build TypeScript
+npm run dev            # Watch mode (rebuilds on changes)
+npm test               # Run all tests
+```
+
+See [CONTRIBUTING.md](./docs/CONTRIBUTING.md) for detailed contribution guidelines.
+
+### Project Structure
+
+```
+keyp/
+├── src/              # TypeScript source
+├── lib/              # Compiled JavaScript
+├── bin/              # Executable entry point
+├── docs/             # Documentation
+├── completions/      # Shell completion scripts
+└── package.json      # Package configuration
 ```
 
 ## Documentation

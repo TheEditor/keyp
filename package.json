@@ -1,19 +1,26 @@
 {
   "name": "@theeditor/keyp",
-  "version": "0.0.1",
+  "version": "0.2.0",
+  "description": "🔒 Local-first secret manager for developers - pass for the Node.js generation",
   "type": "module",
-  "publishConfig": {
-    "access": "public"
-  },
-  "description": "Local-first secret manager for developers",
   "main": "lib/index.js",
   "bin": {
     "keyp": "./bin/keyp.js"
   },
+  "files": [
+    "lib",
+    "bin",
+    "completions",
+    "docs",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "node --test lib/**/*.test.js"
+    "test": "node --test lib/**/*.test.js",
+    "prepack": "npm run build"
   },
   "keywords": [
     "secrets",
@@ -25,9 +32,18 @@
     "developer-tools",
     "local-first",
     "api-keys",
-    "credentials"
+    "credentials",
+    "vault",
+    "aes-256",
+    "pbkdf2",
+    "git-sync",
+    "backup"
   ],
-  "author": "Dave Fobare <dave.fobare@gmail.com>",
+  "author": {
+    "name": "Dave Fobare",
+    "email": "dave.fobare@gmail.com",
+    "url": "https://github.com/TheEditor"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -38,7 +54,11 @@
   },
   "homepage": "https://github.com/TheEditor/keyp#readme",
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
