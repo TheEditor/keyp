@@ -15,6 +15,10 @@ import { setCommand } from './commands/set.js';
 import { getCommand } from './commands/get.js';
 import { listCommand } from './commands/list.js';
 import { deleteCommand } from './commands/delete.js';
+import { renameCommand } from './commands/rename.js';
+import { copyCommand } from './commands/copy.js';
+import { exportCommand } from './commands/export.js';
+import { importCommand } from './commands/import.js';
 import { printBanner } from './utils.js';
 
 // Load package.json in ESM context
@@ -72,7 +76,8 @@ function createProgram(): Command {
     .description('Retrieve a secret from the vault (copies to clipboard)')
     .option('--stdout', 'Print to stdout instead of clipboard')
     .option('--no-clear', 'Do not auto-clear clipboard')
-    .action(async (name: string, options: { stdout?: boolean; noClear?: boolean }) => {
+    .option('--timeout <seconds>', 'Auto-clear timeout in seconds (default 45)')
+    .action(async (name: string, options: { stdout?: boolean; noClear?: boolean; timeout?: string }) => {
       try {
         await getCommand(name, options);
       } catch (error) {
@@ -116,6 +121,70 @@ function createProgram(): Command {
     });
 
   /**
+   * keyp rename - Rename a secret
+   */
+  program
+    .command('rename <old-name> <new-name>')
+    .description('Rename a secret')
+    .action(async (oldName: string, newName: string) => {
+      try {
+        await renameCommand(oldName, newName);
+      } catch (error) {
+        console.error(chalk.red('Fatal error:', error instanceof Error ? error.message : String(error)));
+        process.exit(1);
+      }
+    });
+
+  /**
+   * keyp copy - Copy a secret
+   */
+  program
+    .command('copy <source> <dest>')
+    .description('Copy a secret to a new name')
+    .action(async (source: string, dest: string) => {
+      try {
+        await copyCommand(source, dest);
+      } catch (error) {
+        console.error(chalk.red('Fatal error:', error instanceof Error ? error.message : String(error)));
+        process.exit(1);
+      }
+    });
+
+  /**
+   * keyp export - Export secrets
+   */
+  program
+    .command('export [output-file]')
+    .description('Export secrets to file (encrypted by default)')
+    .option('--plain', 'Export as plaintext JSON (unencrypted)')
+    .option('--stdout', 'Print to stdout instead of file')
+    .action(async (outputFile?: string, options?: { plain?: boolean; stdout?: boolean }) => {
+      try {
+        await exportCommand(outputFile, options);
+      } catch (error) {
+        console.error(chalk.red('Fatal error:', error instanceof Error ? error.message : String(error)));
+        process.exit(1);
+      }
+    });
+
+  /**
+   * keyp import - Import secrets
+   */
+  program
+    .command('import <input-file>')
+    .description('Import secrets from file')
+    .option('--replace', 'Replace all existing secrets')
+    .option('--dry-run', 'Preview without importing')
+    .action(async (inputFile: string, options?: { replace?: boolean; dryRun?: boolean }) => {
+      try {
+        await importCommand(inputFile, options);
+      } catch (error) {
+        console.error(chalk.red('Fatal error:', error instanceof Error ? error.message : String(error)));
+        process.exit(1);
+      }
+    });
+
+  /**
    * Help command with banner
    */
   program.on('--help', () => {
@@ -123,10 +192,13 @@ function createProgram(): Command {
     console.log(chalk.gray('Examples:'));
     console.log(chalk.gray('  $ keyp init                    Initialize vault'));
     console.log(chalk.gray('  $ keyp set github-token        Store a secret (prompts for value)'));
-    console.log(chalk.gray('  $ keyp set api-key sk-123      Store a secret with value'));
-    console.log(chalk.gray('  $ keyp list                    List all secrets'));
     console.log(chalk.gray('  $ keyp get github-token        Get secret (copies to clipboard)'));
+    console.log(chalk.gray('  $ keyp list                    List all secrets'));
+    console.log(chalk.gray('  $ keyp rename old-name new-name Rename a secret'));
+    console.log(chalk.gray('  $ keyp copy source dest        Copy a secret'));
     console.log(chalk.gray('  $ keyp delete github-token     Delete a secret'));
+    console.log(chalk.gray('  $ keyp export secrets.json     Export secrets'));
+    console.log(chalk.gray('  $ keyp import secrets.json     Import secrets'));
     console.log('');
     console.log(chalk.gray('Documentation:'));
     console.log(chalk.gray('  https://github.com/TheEditor/keyp'));

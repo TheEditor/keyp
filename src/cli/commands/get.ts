@@ -25,6 +25,7 @@ export async function getCommand(
   options?: {
     stdout?: boolean;
     noClear?: boolean;
+    timeout?: string;
   }
 ): Promise<void> {
   if (!name) {
@@ -76,7 +77,17 @@ export async function getCommand(
         await clipboard.write(secret);
         printSuccess('Copied to clipboard');
 
-        const clearTime = 45; // seconds
+        // Parse timeout option (default 45 seconds)
+        let clearTime = 45;
+        if (options?.timeout) {
+          const parsed = parseInt(options.timeout, 10);
+          if (isNaN(parsed) || parsed <= 0) {
+            printWarning('Invalid timeout - using default 45 seconds');
+          } else {
+            clearTime = parsed;
+          }
+        }
+
         printInfo(`Will clear in ${clearTime} seconds`);
         console.log('');
 

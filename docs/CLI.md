@@ -478,6 +478,252 @@ This is just guidance - you can still use the password.
 
 ---
 
+## Enhanced Commands
+
+### keyp rename <old-name> <new-name>
+
+Rename an existing secret to a new name while preserving its value.
+
+**Usage:**
+```bash
+keyp rename <old-name> <new-name>
+```
+
+**Example:**
+```bash
+$ keyp rename github-token github-api-token
+Enter master password: ●●●●●●●●
+Enter master password to save: ●●●●●●●●
+✓ Secret renamed: "github-token" → "github-api-token"
+ℹ Total secrets: 5
+```
+
+**Use cases:**
+- Correct typos in secret names
+- Reorganize secret naming conventions
+- Update names for clarity
+
+**Errors:**
+- "Secret 'X' not found" - old name doesn't exist
+- "Secret 'X' already exists" - new name is already taken
+- "New name must be different" - old and new names are the same
+
+---
+
+### keyp copy <source> <dest>
+
+Copy a secret to a new name (duplicate with new identifier).
+
+**Usage:**
+```bash
+keyp copy <source> <dest>
+```
+
+**Example:**
+```bash
+$ keyp copy github-token gitlab-token
+Enter master password: ●●●●●●●●
+Enter master password to save: ●●●●●●●●
+✓ Secret copied: "github-token" → "gitlab-token"
+ℹ Total secrets: 6
+```
+
+**Use cases:**
+- Create similar secrets for different services
+- Backup important secrets under new names
+- Test secret values before permanently replacing them
+
+**Notes:**
+- Source secret value is preserved exactly
+- Destination must not already exist
+- Both secrets are independent after copying
+
+---
+
+### keyp export [output-file]
+
+Export secrets to a file for backup or migration.
+
+**Usage:**
+```bash
+keyp export                           # Auto-generate filename
+keyp export secrets-backup.json       # Specify output file
+keyp export secrets.json --plain      # Export as plaintext (unencrypted)
+keyp export --stdout                  # Print to stdout
+```
+
+**Options:**
+- `--plain` - Export as plaintext JSON (WARNING: unencrypted)
+  - Use for migration or testing only
+  - Keep plaintext exports secure!
+  - Not suitable for long-term storage
+
+- `--stdout` - Print to stdout instead of file
+  - Useful for pipes and scripts
+  - Can be redirected to file: `keyp export --stdout > backup.json`
+
+**Examples:**
+```bash
+# Encrypted export to file
+$ keyp export secrets-backup.json
+Enter master password: ●●●●●●●●
+✓ Secrets exported (encrypted)
+ℹ Location: ~/secrets-backup.json
+ℹ Secrets exported: 5
+
+# Plaintext export (with warning)
+$ keyp export --plain secrets.json
+Enter master password: ●●●●●●●●
+⚠ Exporting secrets as PLAINTEXT - this is NOT encrypted!
+✓ Secrets exported (plaintext)
+ℹ Location: ~/secrets.json
+⚠ Remember: This file contains PLAINTEXT secrets - keep it safe!
+
+# Export to stdout for piping
+$ keyp export --stdout | gzip > encrypted-backup.gz
+Enter master password: ●●●●●●●●
+```
+
+**Output:**
+- Default: `keyp-export-{timestamp}.json`
+- Encrypted exports can be safely stored/backed up
+- Plaintext exports should be encrypted or deleted after use
+
+**Use cases:**
+- Create backups of vault
+- Migrate to different machine
+- Share with team (encrypted exports only)
+- Version control (encrypted exports only)
+
+---
+
+### keyp import <input-file>
+
+Import secrets from a file (merge or replace mode).
+
+**Usage:**
+```bash
+keyp import secrets.json              # Import and merge
+keyp import secrets.json --dry-run    # Preview changes
+keyp import secrets.json --replace    # Replace all existing secrets
+```
+
+**Options:**
+- `--dry-run` - Show what would be imported without making changes
+  - Preview import results
+  - Verify file format
+  - Check for conflicts
+
+- `--replace` - Delete all existing secrets and import
+  - DANGEROUS - use with caution!
+  - Requires confirmation before proceeding
+  - Useful for full vault migration
+
+**Default behavior:** Merge
+- Add new secrets
+- Update existing secrets with same names
+- Preserve secrets not in import file
+
+**Examples:**
+```bash
+# Import and merge
+$ keyp import backup.json
+Enter master password: ●●●●●●●●
+ℹ Import summary:
+ℹ   New secrets: 3
+ℹ   Updated secrets: 2
+Enter master password to save: ●●●●●●●●
+✓ Secrets imported successfully
+ℹ New secrets: 3
+ℹ Updated secrets: 2
+ℹ Total secrets now: 10
+
+# Dry run preview
+$ keyp import backup.json --dry-run
+Enter master password: ●●●●●●●●
+ℹ Import summary:
+ℹ   New secrets: 3
+ℹ   Updated secrets: 2
+ℹ Dry run mode - no changes made
+
+# Replace all secrets
+$ keyp import new-vault.json --replace
+Enter master password: ●●●●●●●●
+⚠ REPLACE mode: This will delete all existing secrets!
+Delete all existing secrets and import? (y/N): y
+✓ Secrets imported successfully
+ℹ New secrets: 5
+ℹ Updated secrets: 0
+ℹ Total secrets now: 5
+```
+
+**Supported formats:**
+- Plaintext JSON: `{"key": "value", ...}`
+- Encrypted vault exports (future support)
+
+**Use cases:**
+- Restore from backup
+- Migrate from another tool
+- Merge vaults from team members
+- One-time import of bulk secrets
+
+**Safety features:**
+- Dry-run mode for preview
+- Confirmation for replace mode
+- Shows summary of changes
+- Preserves existing secrets (by default)
+
+---
+
+### keyp get <name> [options] - Timeout Control
+
+Extended `keyp get` command with clipboard timeout configuration.
+
+**New Option:**
+```bash
+keyp get <name> --timeout <seconds>   # Custom clear timeout
+```
+
+**Example:**
+```bash
+# Use default 45-second timeout
+$ keyp get api-key
+Enter master password: ●●●●●●●●
+✓ Copied to clipboard
+ℹ Will clear in 45 seconds
+
+# Custom timeout (60 seconds)
+$ keyp get api-key --timeout 60
+Enter master password: ●●●●●●●●
+✓ Copied to clipboard
+ℹ Will clear in 60 seconds
+
+# Quick timeout (10 seconds)
+$ keyp get secret --timeout 10
+Enter master password: ●●●●●●●●
+✓ Copied to clipboard
+ℹ Will clear in 10 seconds
+
+# Disable auto-clear entirely
+$ keyp get api-key --no-clear
+Enter master password: ●●●●●●●●
+✓ Copied to clipboard
+ℹ Will clear in 45 seconds
+```
+
+**Use cases:**
+- Longer timeout for complex copy-paste operations
+- Shorter timeout for high-security environments
+- Disable clearing for scripts that need clipboard persistence
+
+**Notes:**
+- Default: 45 seconds
+- Minimum: 1 second (practical minimum ~5s)
+- Works with `--no-clear` to disable entirely
+- Invalid values fall back to default
+
+---
+
 ## Tips & Tricks
 
 ### Bash Aliases
