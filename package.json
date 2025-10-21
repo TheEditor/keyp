@@ -5,12 +5,14 @@
     "access": "public"
   },
   "description": "Local-first secret manager for developers",
-  "main": "index.js",
+  "main": "lib/index.js",
   "bin": {
     "keyp": "./bin/keyp.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "node --test lib/**/*.test.js"
   },
   "keywords": [
     "secrets",
@@ -36,5 +38,9 @@
   "homepage": "https://github.com/TheEditor/keyp#readme",
   "engines": {
     "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
   }
 }

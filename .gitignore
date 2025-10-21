@@ -27,6 +27,10 @@ Thumbs.db
 # Build
 dist/
 build/
+lib/
+*.d.ts
+*.d.ts.map
+*.js.map
 
 # Misc
 *.log
