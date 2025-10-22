@@ -197,13 +197,6 @@ keyp sync init https://github.com/you/keyp-backup.git
 keyp sync pull
 ```
 
-### Roadmap
-
-We're committed to continuous improvement:
-
-- **v0.3.0** — Performance optimizations and cross-platform CI/CD
-- **v1.0.0** — Stable API, comprehensive documentation, community feedback integration
-
 ### Open Source & Community
 
 keyp is fully open-source under the MIT license:

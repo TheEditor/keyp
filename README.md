@@ -244,42 +244,6 @@ keyp/
 - 🔐 **[Security Guide](./docs/SECURITY.md)** - Cryptographic details and threat model
 - 📋 **[Vault Format](./docs/VAULT_FORMAT.md)** - Technical vault file specification
 
-## Roadmap
-
-**Week 1: Core encryption + vault management** ✅
-- [x] Core encryption implementation (AES-256-GCM)
-- [x] PBKDF2 key derivation with 100,000+ iterations
-- [x] Vault initialization and management
-- [x] Secret CRUD operations
-- [x] Comprehensive tests (39 passing, 100%)
-- [x] Security and vault format documentation
-
-**Week 2: CLI Commands** ✅
-- [x] Beautiful CLI with colors and formatting
-- [x] `keyp init` - Initialize vault with password prompts
-- [x] `keyp set <name> [value]` - Store secrets
-- [x] `keyp get <name>` - Retrieve secrets to clipboard
-- [x] `keyp list` - List all secrets with search
-- [x] `keyp delete <name>` - Delete secrets (bonus)
-- [x] Masked password input for security
-- [x] Clipboard auto-clear after 45 seconds
-
-**Week 3: Git sync + polish** ✅
-- [x] Git integration for encrypted backups
-- [x] `keyp sync init/push/pull/status/config` commands
-- [x] Enhanced password strength validation with visual meter
-- [x] Shell completion scripts (bash and zsh)
-- [x] `keyp stats` - Vault statistics command
-- [x] `keyp config` - Configuration management
-- [x] Comprehensive Git sync and CLI documentation
-
-**Week 4: v1.0.0 launch** 📅
-- [ ] Complete documentation and examples
-- [ ] Launch announcement
-- [ ] Community feedback and iteration
-- [ ] Performance optimization
-- [ ] Additional platform support
-
 ## Philosophy
 
 **keyp** follows these principles:
