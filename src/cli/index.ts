@@ -22,6 +22,7 @@ import { importCommand } from './commands/import.js';
 import { createSyncCommand } from './commands/sync.js';
 import { statsCommand } from './commands/stats.js';
 import { configCommand } from './commands/config.js';
+import { destroyCommand } from './commands/destroy.js';
 import { printBanner } from './utils.js';
 
 // Load package.json in ESM context
@@ -223,6 +224,21 @@ function createProgram(): Command {
     });
 
   /**
+   * keyp destroy - Permanently delete vault
+   */
+  program
+    .command('destroy')
+    .description('Permanently delete vault (cannot be undone)')
+    .action(async () => {
+      try {
+        await destroyCommand();
+      } catch (error) {
+        console.error(chalk.red('Fatal error:', error instanceof Error ? error.message : String(error)));
+        process.exit(1);
+      }
+    });
+
+  /**
    * Help command with banner
    */
   program.on('--help', () => {
@@ -243,6 +259,7 @@ function createProgram(): Command {
     console.log(chalk.gray('  $ keyp stats                   Show vault statistics'));
     console.log(chalk.gray('  $ keyp config                  Show configuration'));
     console.log(chalk.gray('  $ keyp config set key value    Set configuration value'));
+    console.log(chalk.gray('  $ keyp destroy                 Permanently delete vault'));
     console.log('');
     console.log(chalk.gray('Documentation:'));
     console.log(chalk.gray('  https://github.com/TheEditor/keyp'));

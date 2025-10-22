@@ -27,6 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Clipboard timeout configuration
   - Auto-lock settings
   - Git auto-sync options
+- `keyp destroy` - Permanently delete entire vault with safety confirmations
+  - Severe warning messages about irreversible deletion
+  - Explicit "destroy" confirmation requirement
+  - Master password verification
+  - Deletion of vault file and all configuration files
 - Enhanced password strength validation with visual meter
   - Entropy-based strength scoring (0-100%)
   - Visual progress bar (█████░░░░░)

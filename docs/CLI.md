@@ -1076,6 +1076,82 @@ $ keyp config reset
 
 ---
 
+### keyp destroy
+
+Permanently delete the entire vault and all associated configuration files. **This action cannot be undone.**
+
+⚠️ **WARNING:** This command will:
+- Delete the vault file (vault.json)
+- Delete all stored secrets
+- Delete configuration files
+- Delete Git sync configuration (if configured)
+- Delete sync time tracking
+
+This is irreversible and cannot be recovered.
+
+**Usage:**
+```bash
+keyp destroy
+```
+
+**Interactive prompts:**
+1. Displays severe warning message about permanent deletion
+2. Requires explicit confirmation (must type "destroy")
+3. Requires master password verification
+4. Final confirmation before deletion
+
+**Example:**
+```bash
+$ keyp destroy
+
+⚠️  DANGER ⚠️
+────────────────────────────────────
+Permanent Vault Deletion
+
+You are about to PERMANENTLY DELETE your entire vault.
+This action CANNOT be undone.
+
+Vault location: ~/.keyp/vault.json
+Secrets: 42
+Last modified: 10/20/2025, 3:45:00 PM
+
+This will delete:
+  • All secrets in the vault
+  • Vault configuration files
+  • Git sync configuration
+  • All sync history
+
+Are you absolutely sure? Type 'destroy' to confirm: destroy
+Enter master password to verify: ●●●●●●●●
+
+✓ Vault destroyed successfully
+ℹ Deleted: ~/.keyp/vault.json
+ℹ Deleted: ~/.keyp/.keyp-config.json
+ℹ Deleted: ~/.keyp/.keyp-git-config.json
+ℹ Deleted: ~/.keyp/.keyp-sync-time
+ℹ The ~/.keyp directory may still exist (you can remove it manually)
+```
+
+**Safety Features:**
+- Requires typing "destroy" to confirm (prevents accidental deletion)
+- Requires master password verification (ensures authorization)
+- Clear warnings about irreversible nature
+- Displays vault size and secret count before deletion
+- Shows deletion summary after completion
+
+**Errors:**
+- "Vault not found" - if no vault is initialized
+- "Confirmation cancelled" - if user doesn't type "destroy"
+- "Invalid master password" - if password verification fails
+
+**Use Cases:**
+- Complete vault reset (initialize fresh vault with new password)
+- Secure removal before uninstalling keyp
+- Migration to different secret management tool
+- Compromised vault that needs complete removal
+
+---
+
 ## Shell Completion
 
 Enable tab completion for faster command entry.

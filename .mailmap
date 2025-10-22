@@ -1,0 +1,5 @@
+# Git contributor mapping
+# Maps alternative names/emails to the canonical author
+# Used to consolidate contributors in GitHub and other tools
+
+Dave Fobare <dave.fobare@gmail.com> Claude <noreply@anthropic.com>
