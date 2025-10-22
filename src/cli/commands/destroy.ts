@@ -6,8 +6,9 @@
 import chalk from 'chalk';
 import { promises as fs } from 'fs';
 import path from 'path';
+import prompts from 'prompts';
 import { getKeypDir, getVaultPath } from '../../config.js';
-import { printError, printWarning, promptPassword, confirm } from '../utils.js';
+import { printError, printWarning, promptPassword } from '../utils.js';
 
 /**
  * Destroy the entire vault permanently
@@ -29,7 +30,7 @@ export async function destroyCommand(): Promise<void> {
     console.log('');
 
     // Require explicit confirmation
-    const response = await require('prompts')({
+    const response = await prompts({
       type: 'text',
       name: 'confirm',
       message: 'Type "destroy" to confirm deletion',
