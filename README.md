@@ -7,42 +7,6 @@
 
 **keyp** is a simple, secure, local-first secret manager designed specifically for developers. Store your API keys, tokens, and credentials with AES-256 encryption, sync across machines via Git, and never worry about leaking secrets again.
 
-## Status
-
-**✅ Week 1 Complete: Core encryption + vault management**
-
-- ✅ AES-256-GCM encryption implementation
-- ✅ PBKDF2 key derivation with secure salts
-- ✅ Encrypted vault file format
-- ✅ Vault initialization and management
-- ✅ Secret CRUD operations
-- ✅ Comprehensive test suite (39 tests, all passing)
-- ✅ Security and format documentation
-
-**✅ Week 2 Complete: CLI Commands**
-
-- ✅ `keyp init` - Initialize vault
-- ✅ `keyp set` - Store secrets
-- ✅ `keyp get` - Retrieve secrets (clipboard support)
-- ✅ `keyp list` - List all secrets
-- ✅ `keyp delete` - Delete secrets
-- ✅ `keyp rename` / `keyp copy` - Manage secrets
-- ✅ `keyp export` / `keyp import` - Backup and migrate
-- ✅ Beautiful terminal UI with colors and formatting
-- ✅ Masked password input for security
-- ✅ All core commands tested and working
-
-**✅ Week 3 Complete: Git sync + polish**
-
-- ✅ Git integration for encrypted backups
-- ✅ `keyp sync` command (init, push, pull, status, config)
-- ✅ Enhanced password strength validation with visual meter
-- ✅ Shell completion scripts (bash and zsh)
-- ✅ `keyp stats` - Vault statistics and encryption info
-- ✅ `keyp config` - Configuration management
-- ✅ Comprehensive Git sync documentation
-- ✅ All 39 tests passing with new features
-
 ## Features
 
 - 🔒 **Secure** - AES-256-GCM encryption with PBKDF2 key derivation
