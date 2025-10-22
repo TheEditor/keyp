@@ -30,23 +30,28 @@ export async function destroyCommand(): Promise<void> {
     console.log('');
 
     // Require explicit confirmation
-    const response = await prompts({
-      type: 'text',
-      name: 'confirm',
-      message: 'Type "destroy" to confirm deletion',
-      validate: (value: string) => {
-        if (value.trim() === 'destroy') {
-          return true;
-        }
-        return 'Type "destroy" exactly to confirm';
-      },
-    });
+    let confirmed = false;
 
-    if (response.confirm !== 'destroy') {
-      console.log('');
-      printWarning('Vault destruction cancelled');
-      console.log('');
-      return;
+    while (!confirmed) {
+      const response = await prompts({
+        type: 'text',
+        name: 'confirm',
+        message: 'Type "destroy" to confirm deletion',
+      });
+
+      if (response.confirm === 'destroy') {
+        confirmed = true;
+      } else if (response.confirm === undefined) {
+        // User cancelled (Ctrl+C or similar)
+        console.log('');
+        printWarning('Vault destruction cancelled');
+        console.log('');
+        return;
+      } else {
+        // User entered something else, show error and loop
+        printWarning('Type "destroy" exactly to confirm');
+        console.log('');
+      }
     }
 
     // Require password verification
