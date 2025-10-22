@@ -38,7 +38,7 @@ Next steps:
   3. keyp get <secret-name>    - Retrieve a secret
 ```
 
-**Screenshot placeholder:** [Show vault initialized screen]
+![keyp init demo](../screenshots/keyp-init.gif)
 
 ### Store Some Secrets
 

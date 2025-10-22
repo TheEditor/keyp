@@ -62,6 +62,8 @@ Confirm master password: ●●●●●●●●
 ✓ Vault initialized successfully!
 ```
 
+![keyp init demo](docs/screenshots/keyp-init.gif)
+
 ### Store a secret
 ```bash
 $ keyp set github-token
