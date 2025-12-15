@@ -58,7 +58,7 @@ export async function initCommand(): Promise<void> {
     }
 
     // Initialize vault
-    const result = manager.initializeVault(password);
+    const result = await manager.initializeVault(password);
 
     if (!result.success) {
       printError(result.error || 'Failed to initialize vault');

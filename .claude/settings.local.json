@@ -1,0 +1,23 @@
+{
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Bash(git log:*)",
+      "Bash(git filter-branch:*)",
+      "Bash(git reflog:*)",
+      "Bash(git gc:*)",
+      "Bash(git push:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git revert:*)",
+      "Bash(git config:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm test:*)",
+      "Bash(node --test:*)",
+      "Skill(bd-issue-tracking)",
+      "Bash(bd onboard:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

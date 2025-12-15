@@ -1,5 +1,5 @@
 /**
- * keyp copy command - Copy a secret to a new name
+ * keyp set command - Store a secret
  */
 
 import chalk from 'chalk';
@@ -7,26 +7,23 @@ import { VaultManager } from '../../vault-manager.js';
 import { SecretsManager } from '../../secrets.js';
 import {
   promptPassword,
+  promptString,
   unlockVaultWithRetry,
   printSuccess,
   printError,
   printInfo,
+  printHint,
 } from '../utils.js';
 
 /**
- * Copy a secret to a new name
+ * Store a secret in the vault
  *
- * @param sourceName - Name of secret to copy
- * @param destName - Name for the copy
+ * @param name - Secret name/key
+ * @param value - Optional secret value (prompts if not provided)
  */
-export async function copyCommand(sourceName?: string, destName?: string): Promise<void> {
-  if (!sourceName || !destName) {
-    printError('Both names required. Usage: keyp copy <source-name> <dest-name>');
-    process.exit(1);
-  }
-
-  if (sourceName === destName) {
-    printError('Destination must be different from source');
+export async function setCommand(name?: string, value?: string): Promise<void> {
+  if (!name) {
+    printError('Secret name required. Usage: keyp set <name> [value]');
     process.exit(1);
   }
 
@@ -50,34 +47,27 @@ export async function copyCommand(sourceName?: string, destName?: string): Promi
       process.exit(1);
     }
 
-    // Check if source secret exists
-    if (!SecretsManager.hasSecret(data, sourceName)) {
-      printError(`Secret "${chalk.cyan(sourceName)}" not found`);
-      manager.lockVault();
-      process.exit(1);
-    }
-
-    // Check if destination name already exists
-    if (SecretsManager.hasSecret(data, destName)) {
-      printError(`Secret "${chalk.cyan(destName)}" already exists`);
-      manager.lockVault();
-      process.exit(1);
-    }
-
-    // Get the secret value
-    const secretValue = SecretsManager.getSecret(data, sourceName);
+    // Get secret value
+    let secretValue = value;
     if (!secretValue) {
-      printError('Failed to retrieve secret value');
-      manager.lockVault();
+      secretValue = await promptString(`Enter value for "${chalk.cyan(name)}"`, '');
+    }
+
+    if (!secretValue) {
+      printError('Secret value cannot be empty');
       process.exit(1);
     }
 
-    // Create copy
-    SecretsManager.setSecret(data, destName, secretValue);
+    // Set secret
+    const result = SecretsManager.setSecret(data, name, secretValue);
+    if (!result.success) {
+      printError(result.error || 'Failed to set secret');
+      process.exit(1);
+    }
 
     // Save vault
     const password = await promptPassword('Enter master password to save');
-    const saveResult = manager.saveVault(password);
+    const saveResult = await manager.saveVault(password);
     if (!saveResult.success) {
       printError(saveResult.error || 'Failed to save vault');
       process.exit(1);
@@ -88,8 +78,10 @@ export async function copyCommand(sourceName?: string, destName?: string): Promi
 
     // Success!
     console.log('');
-    printSuccess(`Secret copied: "${chalk.cyan(sourceName)}" → "${chalk.cyan(destName)}"`);
+    printSuccess(`Secret "${chalk.cyan(name)}" saved`);
     printInfo(`Total secrets: ${SecretsManager.getSecretCount(data)}`);
+    console.log('');
+    printHint(`Retrieve with: keyp get ${name}`);
     console.log('');
   } catch (error) {
     if (error instanceof Error && error.message === 'Password entry cancelled') {

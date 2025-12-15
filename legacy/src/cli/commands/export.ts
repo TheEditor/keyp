@@ -3,7 +3,7 @@
  */
 
 import chalk from 'chalk';
-import { writeFileSync } from 'fs';
+import { promises as fs } from 'fs';
 import { join, resolve } from 'path';
 import { VaultManager } from '../../vault-manager.js';
 import { SecretsManager } from '../../secrets.js';
@@ -71,7 +71,7 @@ export async function exportCommand(
     } else {
       // Encrypted export - copy vault structure
       const vaultContent = JSON.parse(
-        require('fs').readFileSync(manager.getVaultPath(), 'utf-8')
+        await fs.readFile(manager.getVaultPath(), 'utf-8')
       );
       exportData = JSON.stringify(vaultContent, null, 2);
       exportType = 'encrypted';
@@ -95,7 +95,7 @@ export async function exportCommand(
     }
 
     // Write file
-    writeFileSync(finalOutputFile, exportData, 'utf-8');
+    await fs.writeFile(finalOutputFile, exportData, 'utf-8');
 
     // Success!
     console.log('');

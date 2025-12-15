@@ -1,0 +1,14 @@
+# UBS Scanner Ignore File
+node_modules/
+dist/
+build/
+coverage/
+.git/
+.vscode/
+.idea/
+.beads/
+.claude/
+*.md
+*.json
+*.lock
+*.log

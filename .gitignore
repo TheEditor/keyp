@@ -35,3 +35,13 @@ lib/
 # Misc
 *.log
 .npm
+
+# Go
+keyp
+keyp.exe
+*.test
+coverage.out
+
+# Legacy
+legacy/node_modules/
+legacy/lib/

@@ -109,7 +109,7 @@ export async function unlockVaultWithRetry(manager: VaultManager, maxAttempts: n
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const password = await promptPassword('Enter master password');
-      const result = manager.unlockVault(password);
+      const result = await manager.unlockVault(password);
 
       if (result.success) {
         return;

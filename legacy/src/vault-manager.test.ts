@@ -27,67 +27,67 @@ test('VaultManager Integration Tests', async (t) => {
     }
   });
 
-  await t.test('Initialize new vault', () => {
+  await t.test('Initialize new vault', async () => {
     const vaultPath = getTestVaultPath();
     const manager = new VaultManager(vaultPath);
 
-    const result = manager.initializeVault('test-password');
+    const result = await manager.initializeVault('test-password');
 
     assert.equal(result.success, true, 'Should initialize successfully');
     assert.equal(manager.vaultFileExists(), true, 'Vault file should exist');
     assert.equal(manager.isVaultUnlocked(), true, 'Vault should be unlocked after init');
   });
 
-  await t.test('Initialize fails if vault already exists', () => {
+  await t.test('Initialize fails if vault already exists', async () => {
     const vaultPath = getTestVaultPath();
     const manager = new VaultManager(vaultPath);
 
-    manager.initializeVault('password1');
-    const result2 = manager.initializeVault('password2');
+    await manager.initializeVault('password1');
+    const result2 = await manager.initializeVault('password2');
 
     assert.equal(result2.success, false, 'Should fail to re-initialize');
     assert.match(result2.error || '', /already exists/, 'Error should mention existing vault');
   });
 
-  await t.test('Unlock existing vault with correct password', () => {
+  await t.test('Unlock existing vault with correct password', async () => {
     const vaultPath = getTestVaultPath();
     const manager1 = new VaultManager(vaultPath);
-    manager1.initializeVault('test-password');
+    await manager1.initializeVault('test-password');
     manager1.lockVault();
 
     const manager2 = new VaultManager(vaultPath);
-    const result = manager2.unlockVault('test-password');
+    const result = await manager2.unlockVault('test-password');
 
     assert.equal(result.success, true, 'Should unlock successfully');
     assert.equal(manager2.isVaultUnlocked(), true, 'Should be unlocked');
   });
 
-  await t.test('Unlock fails with incorrect password', () => {
+  await t.test('Unlock fails with incorrect password', async () => {
     const vaultPath = getTestVaultPath();
     const manager1 = new VaultManager(vaultPath);
-    manager1.initializeVault('correct-password');
+    await manager1.initializeVault('correct-password');
     manager1.lockVault();
 
     const manager2 = new VaultManager(vaultPath);
-    const result = manager2.unlockVault('wrong-password');
+    const result = await manager2.unlockVault('wrong-password');
 
     assert.equal(result.success, false, 'Should fail to unlock');
     assert.equal(manager2.isVaultUnlocked(), false, 'Should remain locked');
   });
 
-  await t.test('Unlock fails if vault does not exist', () => {
+  await t.test('Unlock fails if vault does not exist', async () => {
     const vaultPath = getTestVaultPath();
     const manager = new VaultManager(vaultPath);
-    const result = manager.unlockVault('password');
+    const result = await manager.unlockVault('password');
 
     assert.equal(result.success, false, 'Should fail');
     assert.match(result.error || '', /does not exist/, 'Error should mention non-existent vault');
   });
 
-  await t.test('Lock clears in-memory data', () => {
+  await t.test('Lock clears in-memory data', async () => {
     const vaultPath = getTestVaultPath();
     const manager = new VaultManager(vaultPath);
-    manager.initializeVault('password');
+    await manager.initializeVault('password');
 
     assert.ok(manager.getUnlockedData(), 'Should have data when unlocked');
 
@@ -97,45 +97,45 @@ test('VaultManager Integration Tests', async (t) => {
     assert.equal(manager.isVaultUnlocked(), false, 'Should be locked');
   });
 
-  await t.test('Save and reload vault', () => {
+  await t.test('Save and reload vault', async () => {
     const vaultPath = getTestVaultPath();
     const password = 'test-password';
 
     // Create and save
     const manager1 = new VaultManager(vaultPath);
-    manager1.initializeVault(password);
+    await manager1.initializeVault(password);
     const data1 = manager1.getUnlockedData();
     if (data1) {
       data1['api-key'] = 'sk-test-123';
       data1['token'] = 'tk-test-456';
     }
-    manager1.saveVault(password);
+    await manager1.saveVault(password);
     manager1.lockVault();
 
     // Reload and verify
     const manager2 = new VaultManager(vaultPath);
-    manager2.unlockVault(password);
+    await manager2.unlockVault(password);
     const data2 = manager2.getUnlockedData();
 
     assert.deepEqual(data2, { 'api-key': 'sk-test-123', token: 'tk-test-456' }, 'Should restore saved secrets');
   });
 
-  await t.test('Save fails when vault is locked', () => {
+  await t.test('Save fails when vault is locked', async () => {
     const vaultPath = getTestVaultPath();
     const manager = new VaultManager(vaultPath);
-    manager.initializeVault('password');
+    await manager.initializeVault('password');
     manager.lockVault();
 
-    const result = manager.saveVault('password');
+    const result = await manager.saveVault('password');
 
     assert.equal(result.success, false, 'Should fail to save locked vault');
     assert.match(result.error || '', /not unlocked/, 'Error should indicate vault is locked');
   });
 
-  await t.test('SecretsManager set and get operations', () => {
+  await t.test('SecretsManager set and get operations', async () => {
     const vaultPath = getTestVaultPath();
     const manager = new VaultManager(vaultPath);
-    manager.initializeVault('password');
+    await manager.initializeVault('password');
     const data = manager.getUnlockedData();
 
     assert.ok(data, 'Should have vault data');
@@ -246,13 +246,13 @@ test('VaultManager Integration Tests', async (t) => {
     assert.equal(SecretsManager.getSecretCount(data), 0, 'Should clear all secrets');
   });
 
-  await t.test('Full workflow: init, set secrets, save, reload, retrieve', () => {
+  await t.test('Full workflow: init, set secrets, save, reload, retrieve', async () => {
     const vaultPath = getTestVaultPath();
     const password = 'my-secure-password';
 
     // Step 1: Initialize vault
     const manager1 = new VaultManager(vaultPath);
-    manager1.initializeVault(password);
+    await manager1.initializeVault(password);
 
     // Step 2: Add secrets
     const data1 = manager1.getUnlockedData();
@@ -261,13 +261,13 @@ test('VaultManager Integration Tests', async (t) => {
     SecretsManager.setSecret(data1, 'api-key', 'sk-test-abc');
 
     // Step 3: Save vault
-    const saveResult = manager1.saveVault(password);
+    const saveResult = await manager1.saveVault(password);
     assert.equal(saveResult.success, true, 'Should save successfully');
 
     // Step 4: Lock and reload
     manager1.lockVault();
     const manager2 = new VaultManager(vaultPath);
-    const unlockResult = manager2.unlockVault(password);
+    const unlockResult = await manager2.unlockVault(password);
     assert.equal(unlockResult.success, true, 'Should unlock successfully');
 
     // Step 5: Verify secrets

@@ -1,0 +1,42 @@
+{
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "UBS (js)",
+          "informationUri": "https://github.com/Dicklesworthstone/ultimate_bug_scanner"
+        }
+      },
+      "results": [
+        {
+          "ruleId": "summary.critical",
+          "level": "error",
+          "message": {
+            "text": "57 critical findings"
+          }
+        },
+        {
+          "ruleId": "summary.warning",
+          "level": "warning",
+          "message": {
+            "text": "974 warnings"
+          }
+        },
+        {
+          "ruleId": "summary.info",
+          "level": "note",
+          "message": {
+            "text": "751 info items"
+          }
+        }
+      ],
+      "versionControlProvenance": [
+        {
+          "repositoryUri": "https://github.com/TheEditor/keyp",
+          "revisionId": "3f28640c29967ff025f52e48236435215324f701"
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 /**
- * keyp rename command - Rename a secret
+ * keyp delete command - Delete a secret from vault
  */
 
 import chalk from 'chalk';
@@ -7,27 +7,27 @@ import { VaultManager } from '../../vault-manager.js';
 import { SecretsManager } from '../../secrets.js';
 import {
   promptPassword,
+  confirm,
   unlockVaultWithRetry,
   printSuccess,
   printError,
   printInfo,
-  printHint,
 } from '../utils.js';
 
 /**
- * Rename a secret in the vault
+ * Delete a secret from the vault
  *
- * @param oldName - Current secret name
- * @param newName - New secret name
+ * @param name - Secret name to delete
+ * @param options - Command options
  */
-export async function renameCommand(oldName?: string, newName?: string): Promise<void> {
-  if (!oldName || !newName) {
-    printError('Both names required. Usage: keyp rename <old-name> <new-name>');
-    process.exit(1);
+export async function deleteCommand(
+  name?: string,
+  options?: {
+    force?: boolean;
   }
-
-  if (oldName === newName) {
-    printError('New name must be different from old name');
+): Promise<void> {
+  if (!name) {
+    printError('Secret name required. Usage: keyp delete <name>');
     process.exit(1);
   }
 
@@ -51,35 +51,34 @@ export async function renameCommand(oldName?: string, newName?: string): Promise
       process.exit(1);
     }
 
-    // Check if old secret exists
-    if (!SecretsManager.hasSecret(data, oldName)) {
-      printError(`Secret "${chalk.cyan(oldName)}" not found`);
+    // Check if secret exists
+    if (!SecretsManager.hasSecret(data, name)) {
+      printError(`Secret "${chalk.cyan(name)}" not found`);
       manager.lockVault();
       process.exit(1);
     }
 
-    // Check if new name already exists
-    if (SecretsManager.hasSecret(data, newName)) {
-      printError(`Secret "${chalk.cyan(newName)}" already exists`);
+    // Confirm deletion (unless --force)
+    if (!options?.force) {
+      const confirmed = await confirm(`Delete secret "${chalk.cyan(name)}"?`);
+      if (!confirmed) {
+        printInfo('Deletion cancelled');
+        manager.lockVault();
+        process.exit(0);
+      }
+    }
+
+    // Delete secret
+    const result = SecretsManager.deleteSecret(data, name);
+    if (!result.success) {
+      printError(result.error || 'Failed to delete secret');
       manager.lockVault();
       process.exit(1);
     }
-
-    // Get the secret value
-    const secretValue = SecretsManager.getSecret(data, oldName);
-    if (!secretValue) {
-      printError('Failed to retrieve secret value');
-      manager.lockVault();
-      process.exit(1);
-    }
-
-    // Delete old, add new
-    SecretsManager.deleteSecret(data, oldName);
-    SecretsManager.setSecret(data, newName, secretValue);
 
     // Save vault
     const password = await promptPassword('Enter master password to save');
-    const saveResult = manager.saveVault(password);
+    const saveResult = await manager.saveVault(password);
     if (!saveResult.success) {
       printError(saveResult.error || 'Failed to save vault');
       process.exit(1);
@@ -90,8 +89,8 @@ export async function renameCommand(oldName?: string, newName?: string): Promise
 
     // Success!
     console.log('');
-    printSuccess(`Secret renamed: "${chalk.cyan(oldName)}" → "${chalk.cyan(newName)}"`);
-    printInfo(`Total secrets: ${SecretsManager.getSecretCount(data)}`);
+    printSuccess(`Secret "${chalk.cyan(name)}" deleted`);
+    printInfo(`Remaining secrets: ${SecretsManager.getSecretCount(data)}`);
     console.log('');
   } catch (error) {
     if (error instanceof Error && error.message === 'Password entry cancelled') {

@@ -3,7 +3,7 @@
  */
 
 import chalk from 'chalk';
-import { readFileSync, existsSync } from 'fs';
+import { promises as fs, existsSync } from 'fs';
 import { resolve } from 'path';
 import { VaultManager } from '../../vault-manager.js';
 import { SecretsManager } from '../../secrets.js';
@@ -57,7 +57,7 @@ export async function importCommand(
     // Read import file
     let importData: Record<string, string>;
     try {
-      const fileContent = readFileSync(filePath, 'utf-8');
+      const fileContent = await fs.readFile(filePath, 'utf-8');
       const parsed = JSON.parse(fileContent);
 
       // Detect format (plaintext vs encrypted vault)
@@ -155,7 +155,7 @@ export async function importCommand(
 
     // Save vault
     const password = await promptPassword('Enter master password to save');
-    const saveResult = manager.saveVault(password);
+    const saveResult = await manager.saveVault(password);
     if (!saveResult.success) {
       printError(saveResult.error || 'Failed to save vault');
       process.exit(1);

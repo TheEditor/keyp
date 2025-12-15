@@ -2,7 +2,7 @@
  * Vault management - handles initialization, unlocking, and persistence
  */
 
-import { readFileSync, writeFileSync } from 'fs';
+import { promises as fs } from 'fs';
 import { encrypt, decrypt, EncryptionResult } from './crypto.js';
 import { VaultFile, VaultData, CryptoConfig } from './types.js';
 import { getVaultPath, vaultExists, DEFAULT_CONFIG, ensureKeypDirExists } from './config.js';
@@ -35,7 +35,7 @@ export class VaultManager {
    * @param password - Master password for vault
    * @returns Result indicating success or failure
    */
-  initializeVault(password: string): { success: boolean; message?: string; error?: string } {
+  async initializeVault(password: string): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
       if (vaultExists(this.vaultPath)) {
         return {
@@ -73,7 +73,7 @@ export class VaultManager {
       };
 
       // Write vault to disk
-      writeFileSync(this.vaultPath, JSON.stringify(vaultFile, null, 2));
+      await fs.writeFile(this.vaultPath, JSON.stringify(vaultFile, null, 2));
 
       // Mark vault as unlocked with empty data
       this.unlockedData = emptyData;
@@ -95,7 +95,7 @@ export class VaultManager {
    * @param password - Master password for vault
    * @returns Result indicating success or failure
    */
-  unlockVault(password: string): { success: boolean; message?: string; error?: string } {
+  async unlockVault(password: string): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
       if (!vaultExists(this.vaultPath)) {
         return {
@@ -109,7 +109,7 @@ export class VaultManager {
       }
 
       // Read vault file
-      const vaultContent = readFileSync(this.vaultPath, 'utf-8');
+      const vaultContent = await fs.readFile(this.vaultPath, 'utf-8');
       const vaultFile: VaultFile = JSON.parse(vaultContent);
 
       // Prepare encryption result for decryption
@@ -151,7 +151,7 @@ export class VaultManager {
    * @param password - Master password (needed to re-encrypt data)
    * @returns Result indicating success or failure
    */
-  saveVault(password: string): { success: boolean; message?: string; error?: string } {
+  async saveVault(password: string): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
       if (!this.isUnlocked || this.unlockedData === null) {
         return {
@@ -164,7 +164,7 @@ export class VaultManager {
       const encryptionResult = encrypt(JSON.stringify(this.unlockedData), password, this.keyDerivationIterations);
 
       // Read existing vault to preserve metadata
-      const vaultContent = readFileSync(this.vaultPath, 'utf-8');
+      const vaultContent = await fs.readFile(this.vaultPath, 'utf-8');
       const vaultFile: VaultFile = JSON.parse(vaultContent);
 
       // Update encrypted data and timestamp
@@ -175,7 +175,7 @@ export class VaultManager {
       vaultFile.updatedAt = new Date().toISOString();
 
       // Write updated vault to disk
-      writeFileSync(this.vaultPath, JSON.stringify(vaultFile, null, 2));
+      await fs.writeFile(this.vaultPath, JSON.stringify(vaultFile, null, 2));
 
       return { success: true, message: 'Vault saved successfully' };
     } catch (error) {
