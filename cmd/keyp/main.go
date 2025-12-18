@@ -3,11 +3,23 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
 
 var version = "2.0.0-dev"
+
+// getVaultPath returns the vault path from flag or default
+func getVaultPath() string {
+	// Check init command path flag
+	if initCmdPath != "" {
+		return initCmdPath
+	}
+	// Default to ~/.keyp/vault.db
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".keyp", "vault.db")
+}
 
 var rootCmd = &cobra.Command{
 	Use:   "keyp",
