@@ -45,3 +45,6 @@ coverage.out
 # Legacy
 legacy/node_modules/
 legacy/lib/
+
+# AI planning documents (ephemeral)
+history/

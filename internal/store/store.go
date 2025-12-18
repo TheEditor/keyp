@@ -41,8 +41,32 @@ func (s *Store) Close() error {
 	return s.db.Close()
 }
 
+// SetMeta stores a metadata key-value pair
+func (s *Store) SetMeta(key, value string) error {
+	_, err := s.db.Exec(
+		"INSERT OR REPLACE INTO vault_meta (key, value) VALUES (?, ?)",
+		key, value,
+	)
+	return err
+}
+
+// GetMeta retrieves a metadata value by key
+func (s *Store) GetMeta(key string) (string, error) {
+	var value string
+	err := s.db.QueryRow("SELECT value FROM vault_meta WHERE key = ?", key).Scan(&value)
+	if err == sql.ErrNoRows {
+		return "", ErrNotFound
+	}
+	return value, err
+}
+
 func (s *Store) initSchema() error {
 	schema := `
+    CREATE TABLE IF NOT EXISTS vault_meta (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS secrets (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
