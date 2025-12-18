@@ -1,15 +1,19 @@
 package store
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/TheEditor/keyp/internal/model"
 )
 
-var ErrNotFound = errors.New("secret not found")
+// SearchOptions holds filtering options for search queries
+type SearchOptions struct {
+	Tags  []string
+	Limit int
+}
 
 // Store handles SQLite database operations
 type Store struct {
@@ -86,14 +90,14 @@ func (s *Store) initSchema() error {
 }
 
 // Create inserts a new secret with its fields
-func (s *Store) Create(secret *model.SecretObject) error {
-	tx, err := s.db.Begin()
+func (s *Store) Create(ctx context.Context, secret *model.SecretObject) error {
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	_, err = tx.Exec(
+	_, err = tx.ExecContext(ctx,
 		"INSERT INTO secrets (id, name, tags, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
 		secret.ID, secret.Name, secret.TagsJSON(), secret.Notes,
 		secret.CreatedAt.Format(time.RFC3339),
@@ -104,7 +108,7 @@ func (s *Store) Create(secret *model.SecretObject) error {
 	}
 
 	for _, f := range secret.Fields {
-		_, err = tx.Exec(
+		_, err = tx.ExecContext(ctx,
 			"INSERT INTO fields (id, secret_id, label, value, sensitive, type, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)",
 			f.ID, secret.ID, f.Label, f.Value, boolToInt(f.Sensitive), f.Type, f.SortOrder,
 		)
@@ -117,8 +121,8 @@ func (s *Store) Create(secret *model.SecretObject) error {
 }
 
 // GetByName retrieves a secret by name
-func (s *Store) GetByName(name string) (*model.SecretObject, error) {
-	row := s.db.QueryRow(
+func (s *Store) GetByName(ctx context.Context, name string) (*model.SecretObject, error) {
+	row := s.db.QueryRowContext(ctx,
 		"SELECT id, name, tags, notes, created_at, updated_at FROM secrets WHERE name = ?",
 		name,
 	)
@@ -131,7 +135,7 @@ func (s *Store) GetByName(name string) (*model.SecretObject, error) {
 		return nil, err
 	}
 
-	fields, err := s.getFields(secret.ID)
+	fields, err := s.getFields(ctx, secret.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -140,11 +144,25 @@ func (s *Store) GetByName(name string) (*model.SecretObject, error) {
 	return secret, nil
 }
 
-// List returns all secrets (without field values for efficiency)
-func (s *Store) List() ([]*model.SecretObject, error) {
-	rows, err := s.db.Query(
-		"SELECT id, name, tags, notes, created_at, updated_at FROM secrets ORDER BY name",
-	)
+// List returns all secrets with optional filtering
+func (s *Store) List(ctx context.Context, opts *SearchOptions) ([]*model.SecretObject, error) {
+	query := "SELECT id, name, tags, notes, created_at, updated_at FROM secrets"
+	args := []interface{}{}
+
+	// Apply tag filtering if specified
+	if opts != nil && len(opts.Tags) > 0 {
+		query += " WHERE " + buildTagFilter(opts.Tags, &args)
+	}
+
+	query += " ORDER BY name"
+
+	// Apply limit if specified
+	if opts != nil && opts.Limit > 0 {
+		query += " LIMIT ?"
+		args = append(args, opts.Limit)
+	}
+
+	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -162,14 +180,28 @@ func (s *Store) List() ([]*model.SecretObject, error) {
 }
 
 // Search performs full-text search across name, tags, notes
-func (s *Store) Search(query string) ([]*model.SecretObject, error) {
-	rows, err := s.db.Query(`
+func (s *Store) Search(ctx context.Context, query string, opts *SearchOptions) ([]*model.SecretObject, error) {
+	sqlQuery := `
         SELECT s.id, s.name, s.tags, s.notes, s.created_at, s.updated_at
         FROM secrets s
         JOIN secrets_fts fts ON s.rowid = fts.rowid
-        WHERE secrets_fts MATCH ?
-        ORDER BY rank
-    `, query)
+        WHERE secrets_fts MATCH ?`
+	args := []interface{}{query}
+
+	// Apply tag filtering if specified
+	if opts != nil && len(opts.Tags) > 0 {
+		sqlQuery += " AND " + buildTagFilter(opts.Tags, &args)
+	}
+
+	sqlQuery += " ORDER BY rank"
+
+	// Apply limit if specified
+	if opts != nil && opts.Limit > 0 {
+		sqlQuery += " LIMIT ?"
+		args = append(args, opts.Limit)
+	}
+
+	rows, err := s.db.QueryContext(ctx, sqlQuery, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -186,9 +218,54 @@ func (s *Store) Search(query string) ([]*model.SecretObject, error) {
 	return secrets, rows.Err()
 }
 
+// Update modifies an existing secret
+func (s *Store) Update(ctx context.Context, secret *model.SecretObject) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Update the main secret record
+	secret.UpdatedAt = time.Now()
+	result, err := tx.ExecContext(ctx,
+		"UPDATE secrets SET name = ?, tags = ?, notes = ?, updated_at = ? WHERE id = ?",
+		secret.Name, secret.TagsJSON(), secret.Notes,
+		secret.UpdatedAt.Format(time.RFC3339),
+		secret.ID,
+	)
+	if err != nil {
+		return err
+	}
+
+	affected, _ := result.RowsAffected()
+	if affected == 0 {
+		return ErrNotFound
+	}
+
+	// Delete old fields for this secret
+	_, err = tx.ExecContext(ctx, "DELETE FROM fields WHERE secret_id = ?", secret.ID)
+	if err != nil {
+		return err
+	}
+
+	// Insert updated fields
+	for _, f := range secret.Fields {
+		_, err = tx.ExecContext(ctx,
+			"INSERT INTO fields (id, secret_id, label, value, sensitive, type, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)",
+			f.ID, secret.ID, f.Label, f.Value, boolToInt(f.Sensitive), f.Type, f.SortOrder,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
 // Delete removes a secret and its fields
-func (s *Store) Delete(name string) error {
-	result, err := s.db.Exec("DELETE FROM secrets WHERE name = ?", name)
+func (s *Store) Delete(ctx context.Context, name string) error {
+	result, err := s.db.ExecContext(ctx, "DELETE FROM secrets WHERE name = ?", name)
 	if err != nil {
 		return err
 	}
@@ -199,8 +276,8 @@ func (s *Store) Delete(name string) error {
 	return nil
 }
 
-func (s *Store) getFields(secretID string) ([]model.Field, error) {
-	rows, err := s.db.Query(
+func (s *Store) getFields(ctx context.Context, secretID string) ([]model.Field, error) {
+	rows, err := s.db.QueryContext(ctx,
 		"SELECT id, label, value, sensitive, type, sort_order FROM fields WHERE secret_id = ? ORDER BY sort_order",
 		secretID,
 	)
@@ -260,4 +337,34 @@ func boolToInt(b bool) int {
 		return 1
 	}
 	return 0
+}
+
+// buildTagFilter constructs a WHERE clause for tag filtering
+// Tags are stored as JSON arrays, so we use JSON functions to check membership
+func buildTagFilter(tags []string, args *[]interface{}) string {
+	if len(tags) == 0 {
+		return "1=1"
+	}
+
+	// Build a condition that checks if any of the specified tags exist in the tags JSON array
+	conditions := make([]string, len(tags))
+	for i, tag := range tags {
+		conditions[i] = "json_extract(tags, '$') LIKE ?"
+		*args = append(*args, "%\""+tag+"\"%")
+	}
+
+	// Use OR to match any of the tags
+	if len(conditions) == 1 {
+		return conditions[0]
+	}
+
+	filter := "("
+	for i, cond := range conditions {
+		if i > 0 {
+			filter += " OR "
+		}
+		filter += cond
+	}
+	filter += ")"
+	return filter
 }

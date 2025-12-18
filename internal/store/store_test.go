@@ -1,6 +1,9 @@
+//go:build cgo
+
 package store
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -17,11 +20,11 @@ func TestCreateAndGetByName(t *testing.T) {
 	secret.AddField(model.NewField("username", "testuser"))
 	secret.AddField(model.NewField("password", "testpass"))
 
-	if err := s.Create(secret); err != nil {
+	if err := s.Create(context.Background(), secret); err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
 
-	retrieved, err := s.GetByName("test-secret")
+	retrieved, err := s.GetByName(context.Background(), "test-secret")
 	if err != nil {
 		t.Fatalf("GetByName failed: %v", err)
 	}
@@ -44,7 +47,7 @@ func TestGetByNameNotFound(t *testing.T) {
 	s := setupTestStore(t)
 	defer s.Close()
 
-	_, err := s.GetByName("nonexistent")
+	_, err := s.GetByName(context.Background(), "nonexistent")
 	if err != ErrNotFound {
 		t.Errorf("Expected ErrNotFound, got %v", err)
 	}
@@ -57,10 +60,10 @@ func TestList(t *testing.T) {
 	// Create multiple secrets
 	for _, name := range []string{"charlie", "alpha", "bravo"} {
 		secret := model.NewSecretObject(name)
-		s.Create(secret)
+		s.Create(context.Background(), secret)
 	}
 
-	list, err := s.List()
+	list, err := s.List(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("List failed: %v", err)
 	}
@@ -82,30 +85,30 @@ func TestSearch(t *testing.T) {
 	// Create secrets with different content
 	s1 := model.NewSecretObject("gmail-account")
 	s1.Tags = []string{"email", "google"}
-	s.Create(s1)
+	s.Create(context.Background(), s1)
 
 	s2 := model.NewSecretObject("bank-login")
 	s2.Notes = "Chase online banking"
-	s.Create(s2)
+	s.Create(context.Background(), s2)
 
 	s3 := model.NewSecretObject("work-email")
 	s3.Tags = []string{"email", "work"}
-	s.Create(s3)
+	s.Create(context.Background(), s3)
 
 	// Search by name
-	results, _ := s.Search("gmail")
+	results, _ := s.Search(context.Background(), "gmail", nil)
 	if len(results) != 1 {
 		t.Errorf("gmail search: got %d, want 1", len(results))
 	}
 
 	// Search by tag
-	results, _ = s.Search("email")
+	results, _ = s.Search(context.Background(), "email", nil)
 	if len(results) != 2 {
 		t.Errorf("email search: got %d, want 2", len(results))
 	}
 
 	// Search by notes
-	results, _ = s.Search("Chase")
+	results, _ = s.Search(context.Background(), "Chase", nil)
 	if len(results) != 1 {
 		t.Errorf("Chase search: got %d, want 1", len(results))
 	}
@@ -117,13 +120,13 @@ func TestDelete(t *testing.T) {
 
 	secret := model.NewSecretObject("to-delete")
 	secret.AddField(model.NewField("data", "value"))
-	s.Create(secret)
+	s.Create(context.Background(), secret)
 
-	if err := s.Delete("to-delete"); err != nil {
+	if err := s.Delete(context.Background(), "to-delete"); err != nil {
 		t.Fatalf("Delete failed: %v", err)
 	}
 
-	_, err := s.GetByName("to-delete")
+	_, err := s.GetByName(context.Background(), "to-delete")
 	if err != ErrNotFound {
 		t.Error("Secret should be deleted")
 	}
@@ -133,7 +136,7 @@ func TestDeleteNotFound(t *testing.T) {
 	s := setupTestStore(t)
 	defer s.Close()
 
-	err := s.Delete("nonexistent")
+	err := s.Delete(context.Background(), "nonexistent")
 	if err != ErrNotFound {
 		t.Errorf("Expected ErrNotFound, got %v", err)
 	}

@@ -85,3 +85,18 @@ func ParseTags(jsonStr string) []string {
 	json.Unmarshal([]byte(jsonStr), &tags)
 	return tags
 }
+
+const RedactedValue = "********"
+
+// Redacted returns a copy of the secret with sensitive field values masked
+func (s *SecretObject) Redacted() *SecretObject {
+	copy := *s
+	copy.Fields = make([]Field, len(s.Fields))
+	for i, f := range s.Fields {
+		copy.Fields[i] = f
+		if f.Sensitive {
+			copy.Fields[i].Value = RedactedValue
+		}
+	}
+	return &copy
+}

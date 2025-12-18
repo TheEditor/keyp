@@ -1,6 +1,7 @@
 package vault
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -99,43 +100,51 @@ func (v *Vault) IsLocked() bool {
 }
 
 // Create adds a new secret to the vault
-func (v *Vault) Create(secret *model.SecretObject) error {
+func (v *Vault) Create(ctx context.Context, secret *model.SecretObject) error {
 	if v.IsLocked() {
 		return ErrLocked
 	}
-	return v.store.Create(secret)
+	return v.store.Create(ctx, secret)
 }
 
 // GetByName retrieves a secret by name
-func (v *Vault) GetByName(name string) (*model.SecretObject, error) {
+func (v *Vault) GetByName(ctx context.Context, name string) (*model.SecretObject, error) {
 	if v.IsLocked() {
 		return nil, ErrLocked
 	}
-	return v.store.GetByName(name)
+	return v.store.GetByName(ctx, name)
 }
 
 // List returns all secrets
-func (v *Vault) List() ([]*model.SecretObject, error) {
+func (v *Vault) List(ctx context.Context, opts *store.SearchOptions) ([]*model.SecretObject, error) {
 	if v.IsLocked() {
 		return nil, ErrLocked
 	}
-	return v.store.List()
+	return v.store.List(ctx, opts)
 }
 
 // Search performs full-text search
-func (v *Vault) Search(query string) ([]*model.SecretObject, error) {
+func (v *Vault) Search(ctx context.Context, query string, opts *store.SearchOptions) ([]*model.SecretObject, error) {
 	if v.IsLocked() {
 		return nil, ErrLocked
 	}
-	return v.store.Search(query)
+	return v.store.Search(ctx, query, opts)
 }
 
-// Delete removes a secret
-func (v *Vault) Delete(name string) error {
+// Update updates an existing secret
+func (v *Vault) Update(ctx context.Context, secret *model.SecretObject) error {
 	if v.IsLocked() {
 		return ErrLocked
 	}
-	return v.store.Delete(name)
+	return v.store.Update(ctx, secret)
+}
+
+// Delete removes a secret
+func (v *Vault) Delete(ctx context.Context, name string) error {
+	if v.IsLocked() {
+		return ErrLocked
+	}
+	return v.store.Delete(ctx, name)
 }
 
 // Path returns the vault file path
