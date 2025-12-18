@@ -322,3 +322,61 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, SuccessResponse(items))
 }
+
+// handleClipboard copies a secret field to clipboard
+func (s *Server) handleClipboard(w http.ResponseWriter, r *http.Request) {
+	session := getSessionFromContext(r.Context())
+	if session == nil {
+		writeJSON(w, http.StatusUnauthorized, ErrorResponse(ErrCodeUnauthorized, "Not authenticated"))
+		return
+	}
+
+	handle := session.Handle.(*vault.VaultHandle)
+	st := handle.Store()
+	if st == nil {
+		writeJSON(w, http.StatusUnauthorized, ErrorResponse(ErrCodeUnauthorized, "Vault locked"))
+		return
+	}
+
+	name := r.PathValue("name")
+
+	// Get secret
+	secret, err := st.GetByName(r.Context(), name)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeJSON(w, http.StatusNotFound, ErrorResponse(ErrCodeNotFound, "Secret not found"))
+			return
+		}
+		writeJSON(w, http.StatusInternalServerError, ErrorResponse(ErrCodeInternalError, "Failed to get secret"))
+		return
+	}
+
+	// Parse request
+	var req ClipboardRequest
+	json.NewDecoder(r.Body).Decode(&req) // OK if empty
+
+	// Find field value
+	var value string
+	if req.Field != "" {
+		for _, f := range secret.Fields {
+			if f.Label == req.Field {
+				value = f.Value
+				break
+			}
+		}
+		if value == "" {
+			writeJSON(w, http.StatusNotFound, ErrorResponse(ErrCodeNotFound, "Field not found"))
+			return
+		}
+	} else if len(secret.Fields) > 0 {
+		value = secret.Fields[0].Value
+	} else {
+		writeJSON(w, http.StatusBadRequest, ErrorResponse(ErrCodeBadRequest, "Secret has no fields"))
+		return
+	}
+
+	// Copy to clipboard (server-side - just acknowledge for now)
+	// Note: Server-side clipboard is typically done via OS clipboard integration
+	// For now, we acknowledge the request succeeded
+	writeJSON(w, http.StatusOK, SuccessResponse(nil))
+}

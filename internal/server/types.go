@@ -194,3 +194,8 @@ type VersionResponse struct {
 	Version string `json:"version"`
 	Git     string `json:"git,omitempty"`
 }
+
+// ClipboardRequest for POST /v1/secrets/:name/clipboard
+type ClipboardRequest struct {
+	Field string `json:"field,omitempty"` // defaults to first field if empty
+}

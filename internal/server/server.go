@@ -117,4 +117,7 @@ func (s *Server) setupRoutes() {
 
 	// Search route (protected)
 	s.mux.HandleFunc("GET /v1/search", s.withAuth(s.handleSearch))
+
+	// Clipboard route (protected)
+	s.mux.HandleFunc("POST /v1/secrets/{name}/clipboard", s.withAuth(s.handleClipboard))
 }
