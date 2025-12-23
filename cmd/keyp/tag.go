@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/TheEditor/keyp/internal/ui"
-	"github.com/TheEditor/keyp/internal/vault"
 )
 
 var tagCmd = &cobra.Command{
@@ -15,9 +13,9 @@ var tagCmd = &cobra.Command{
 }
 
 var tagAddCmd = &cobra.Command{
-	Use:   "add <secret> <tag>",
-	Short: "Add a tag to a secret",
-	Args:  cobra.ExactArgs(2),
+	Use:   "add <secret> <tag> [<tag> ...]",
+	Short: "Add one or more tags to a secret",
+	Args:  cobra.MinimumNArgs(2),
 	RunE:  runTagAdd,
 }
 
@@ -44,44 +42,52 @@ func init() {
 
 func runTagAdd(cmd *cobra.Command, args []string) error {
 	secretName := args[0]
-	tag := args[1]
+	tagsToAdd := args[1:]
 
-	// Prompt for vault password
-	password, err := ui.PromptPassword("Enter vault password: ")
+	// Get or unlock vault
+	handle, err := getOrUnlockVault(cmd, 0)
 	if err != nil {
 		return err
 	}
 
-	// Open vault
-	v, err := vault.Open(getVaultPath(), password)
-	if err != nil {
-		return fmt.Errorf("failed to open vault: %w", err)
-	}
-	defer v.Close()
-
 	// Get secret
-	secret, err := v.GetByName(cmd.Context(), secretName)
+	secret, err := handle.Store().GetByName(cmd.Context(), secretName)
 	if err != nil {
 		return fmt.Errorf("failed to get secret: %w", err)
 	}
 
-	// Check if tag already exists
-	for _, t := range secret.Tags {
-		if t == tag {
-			fmt.Printf("Tag '%s' already exists on secret '%s'\n", tag, secretName)
-			return nil
+	// Add each tag
+	addedTags := []string{}
+	for _, tag := range tagsToAdd {
+		// Check if tag already exists
+		found := false
+		for _, t := range secret.Tags {
+			if t == tag {
+				fmt.Printf("Tag '%s' already exists on secret '%s'\n", tag, secretName)
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			secret.Tags = append(secret.Tags, tag)
+			addedTags = append(addedTags, tag)
 		}
 	}
 
-	// Add tag
-	secret.Tags = append(secret.Tags, tag)
+	// Update secret if any tags were added
+	if len(addedTags) > 0 {
+		if err := handle.Store().Update(cmd.Context(), secret); err != nil {
+			return fmt.Errorf("failed to update secret: %w", err)
+		}
 
-	// Update secret
-	if err := v.Update(cmd.Context(), secret); err != nil {
-		return fmt.Errorf("failed to update secret: %w", err)
+		if len(addedTags) == 1 {
+			fmt.Printf("Tag '%s' added to secret '%s'\n", addedTags[0], secretName)
+		} else {
+			fmt.Printf("Tags added to secret '%s': %v\n", secretName, addedTags)
+		}
 	}
 
-	fmt.Printf("Tag '%s' added to secret '%s'\n", tag, secretName)
 	return nil
 }
 
@@ -89,21 +95,14 @@ func runTagRm(cmd *cobra.Command, args []string) error {
 	secretName := args[0]
 	tag := args[1]
 
-	// Prompt for vault password
-	password, err := ui.PromptPassword("Enter vault password: ")
+	// Get or unlock vault
+	handle, err := getOrUnlockVault(cmd, 0)
 	if err != nil {
 		return err
 	}
 
-	// Open vault
-	v, err := vault.Open(getVaultPath(), password)
-	if err != nil {
-		return fmt.Errorf("failed to open vault: %w", err)
-	}
-	defer v.Close()
-
 	// Get secret
-	secret, err := v.GetByName(cmd.Context(), secretName)
+	secret, err := handle.Store().GetByName(cmd.Context(), secretName)
 	if err != nil {
 		return fmt.Errorf("failed to get secret: %w", err)
 	}
@@ -127,7 +126,7 @@ func runTagRm(cmd *cobra.Command, args []string) error {
 	secret.Tags = newTags
 
 	// Update secret
-	if err := v.Update(cmd.Context(), secret); err != nil {
+	if err := handle.Store().Update(cmd.Context(), secret); err != nil {
 		return fmt.Errorf("failed to update secret: %w", err)
 	}
 
@@ -136,22 +135,15 @@ func runTagRm(cmd *cobra.Command, args []string) error {
 }
 
 func runTagList(cmd *cobra.Command, args []string) error {
-	// Prompt for vault password
-	password, err := ui.PromptPassword("Enter vault password: ")
+	// Get or unlock vault
+	handle, err := getOrUnlockVault(cmd, 0)
 	if err != nil {
 		return err
 	}
 
-	// Open vault
-	v, err := vault.Open(getVaultPath(), password)
-	if err != nil {
-		return fmt.Errorf("failed to open vault: %w", err)
-	}
-	defer v.Close()
-
 	if len(args) == 0 {
 		// List all tags across all secrets
-		secrets, err := v.List(cmd.Context(), nil)
+		secrets, err := handle.Store().List(cmd.Context(), nil)
 		if err != nil {
 			return fmt.Errorf("failed to list secrets: %w", err)
 		}
@@ -175,7 +167,7 @@ func runTagList(cmd *cobra.Command, args []string) error {
 	} else {
 		// List tags for specific secret
 		secretName := args[0]
-		secret, err := v.GetByName(cmd.Context(), secretName)
+		secret, err := handle.Store().GetByName(cmd.Context(), secretName)
 		if err != nil {
 			return fmt.Errorf("failed to get secret: %w", err)
 		}

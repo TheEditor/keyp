@@ -54,6 +54,13 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 	v.Close()
 
+	// Auto-unlock vault after successful init since user just proved they know the password
+	handle := vault.NewHandle(path)
+	if err := handle.Unlock(password, 0); err != nil {
+		return fmt.Errorf("failed to unlock vault after init: %w", err)
+	}
+	setVaultHandle(handle)
+
 	fmt.Printf("Vault initialized at %s\n", path)
 	return nil
 }
