@@ -87,131 +87,9 @@ func (s *Store) initSchema() error {
         FOREIGN KEY (secret_id) REFERENCES secrets(id) ON DELETE CASCADE,
         UNIQUE(secret_id, label)
     );
-
-    CREATE VIRTUAL TABLE IF NOT EXISTS secrets_fts USING fts5(
-        name, tags, notes, field_labels
-    );
-
-    CREATE TRIGGER IF NOT EXISTS secrets_ai AFTER INSERT ON secrets BEGIN
-        INSERT INTO secrets_fts(rowid, name, tags, notes, field_labels)
-        VALUES (new.rowid, new.name, new.tags, new.notes, '');
-    END;
-
-    CREATE TRIGGER IF NOT EXISTS secrets_ad AFTER DELETE ON secrets BEGIN
-        INSERT INTO secrets_fts(secrets_fts, rowid, name, tags, notes, field_labels)
-        VALUES ('delete', old.rowid, old.name, old.tags, old.notes, '');
-    END;
-
-    CREATE TRIGGER IF NOT EXISTS secrets_au AFTER UPDATE ON secrets BEGIN
-        INSERT INTO secrets_fts(secrets_fts, rowid, name, tags, notes, field_labels)
-        VALUES ('delete', old.rowid, old.name, old.tags, old.notes, '');
-        INSERT INTO secrets_fts(rowid, name, tags, notes, field_labels)
-        VALUES (new.rowid, new.name, new.tags, new.notes, '');
-    END;
     `
 	_, err := s.db.Exec(schema)
-	if err != nil {
-		return err
-	}
-
-	// Migrate existing data: rebuild FTS index with field labels
-	return s.rebuildFTSIndex()
-}
-
-// rebuildFTSIndex rebuilds the FTS5 index with field labels for all secrets
-func (s *Store) rebuildFTSIndex() error {
-	// Delete all FTS entries
-	_, err := s.db.Exec("DELETE FROM secrets_fts")
-	if err != nil {
-		return err
-	}
-
-	// Get all secrets
-	rows, err := s.db.Query("SELECT rowid, id FROM secrets")
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	var secrets []struct {
-		rowid int64
-		id    string
-	}
-	for rows.Next() {
-		var rowid int64
-		var id string
-		if err := rows.Scan(&rowid, &id); err != nil {
-			return err
-		}
-		secrets = append(secrets, struct {
-			rowid int64
-			id    string
-		}{rowid, id})
-	}
-
-	// For each secret, fetch data and rebuild FTS entry
-	for _, secret := range secrets {
-		var name, tags, notes string
-		err := s.db.QueryRow(
-			"SELECT name, tags, notes FROM secrets WHERE id = ?",
-			secret.id,
-		).Scan(&name, &tags, &notes)
-		if err != nil {
-			return err
-		}
-
-		// Get field labels for this secret
-		fieldLabels, err := s.getFieldLabelsForSecret(secret.id)
-		if err != nil {
-			return err
-		}
-
-		// Insert FTS entry with field labels
-		_, err = s.db.Exec(
-			"INSERT INTO secrets_fts(rowid, name, tags, notes, field_labels) VALUES (?, ?, ?, ?, ?)",
-			secret.rowid, name, tags, notes, fieldLabels,
-		)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// getFieldLabelsForSecret returns space-separated field labels for a secret
-func (s *Store) getFieldLabelsForSecret(secretID string) (string, error) {
-	rows, err := s.db.Query(
-		"SELECT label FROM fields WHERE secret_id = ? ORDER BY sort_order",
-		secretID,
-	)
-	if err != nil {
-		return "", err
-	}
-	defer rows.Close()
-
-	var labels []string
-	for rows.Next() {
-		var label string
-		if err := rows.Scan(&label); err != nil {
-			return "", err
-		}
-		labels = append(labels, label)
-	}
-
-	if err := rows.Err(); err != nil {
-		return "", err
-	}
-
-	// Join labels with spaces for FTS
-	var result string
-	for _, label := range labels {
-		if result != "" {
-			result += " "
-		}
-		result += label
-	}
-	return result, nil
+	return err
 }
 
 // Create inserts a new secret with its fields
@@ -240,33 +118,6 @@ func (s *Store) Create(ctx context.Context, secret *model.SecretObject) error {
 		if err != nil {
 			return err
 		}
-	}
-
-	// Rebuild FTS entry with field labels after fields are inserted
-	// Get the rowid of the inserted secret
-	var rowid int64
-	err = tx.QueryRowContext(ctx, "SELECT rowid FROM secrets WHERE id = ?", secret.ID).Scan(&rowid)
-	if err != nil {
-		return err
-	}
-
-	// Delete old FTS entry if it exists
-	_, err = tx.ExecContext(ctx,
-		"INSERT INTO secrets_fts(secrets_fts, rowid, name, tags, notes, field_labels) VALUES ('delete', ?, '', '', '', '')",
-		rowid,
-	)
-	if err != nil {
-		return err
-	}
-
-	// Insert new FTS entry with field labels
-	fieldLabels := buildFieldLabelsForSecret(secret)
-	_, err = tx.ExecContext(ctx,
-		"INSERT INTO secrets_fts(rowid, name, tags, notes, field_labels) VALUES (?, ?, ?, ?, ?)",
-		rowid, secret.Name, secret.TagsJSON(), secret.Notes, fieldLabels,
-	)
-	if err != nil {
-		return err
 	}
 
 	return tx.Commit()
@@ -331,21 +182,23 @@ func (s *Store) List(ctx context.Context, opts *SearchOptions) ([]*model.SecretO
 	return secrets, rows.Err()
 }
 
-// Search performs full-text search across name, tags, notes
+// Search performs simple LIKE-based search across name, tags, notes, and field labels
 func (s *Store) Search(ctx context.Context, query string, opts *SearchOptions) ([]*model.SecretObject, error) {
+	pattern := "%" + query + "%"
+
 	sqlQuery := `
-        SELECT s.id, s.name, s.tags, s.notes, s.created_at, s.updated_at
+        SELECT DISTINCT s.id, s.name, s.tags, s.notes, s.created_at, s.updated_at
         FROM secrets s
-        JOIN secrets_fts fts ON s.rowid = fts.rowid
-        WHERE secrets_fts MATCH ?`
-	args := []interface{}{query}
+        LEFT JOIN fields f ON s.id = f.secret_id
+        WHERE s.name LIKE ? OR s.tags LIKE ? OR s.notes LIKE ? OR f.label LIKE ?`
+	args := []interface{}{pattern, pattern, pattern, pattern}
 
 	// Apply tag filtering if specified
 	if opts != nil && len(opts.Tags) > 0 {
 		sqlQuery += " AND " + buildTagFilter(opts.Tags, &args)
 	}
 
-	sqlQuery += " ORDER BY rank"
+	sqlQuery += " ORDER BY s.name"
 
 	// Apply limit if specified
 	if opts != nil && opts.Limit > 0 {
@@ -412,46 +265,7 @@ func (s *Store) Update(ctx context.Context, secret *model.SecretObject) error {
 		}
 	}
 
-	// Rebuild FTS entry with field labels after fields are inserted
-	// Get the rowid of the secret
-	var rowid int64
-	err = tx.QueryRowContext(ctx, "SELECT rowid FROM secrets WHERE id = ?", secret.ID).Scan(&rowid)
-	if err != nil {
-		return err
-	}
-
-	// Delete old FTS entry
-	_, err = tx.ExecContext(ctx,
-		"INSERT INTO secrets_fts(secrets_fts, rowid, name, tags, notes, field_labels) VALUES ('delete', ?, '', '', '', '')",
-		rowid,
-	)
-	if err != nil {
-		return err
-	}
-
-	// Insert new FTS entry with field labels
-	fieldLabels := buildFieldLabelsForSecret(secret)
-	_, err = tx.ExecContext(ctx,
-		"INSERT INTO secrets_fts(rowid, name, tags, notes, field_labels) VALUES (?, ?, ?, ?, ?)",
-		rowid, secret.Name, secret.TagsJSON(), secret.Notes, fieldLabels,
-	)
-	if err != nil {
-		return err
-	}
-
 	return tx.Commit()
-}
-
-// buildFieldLabelsForSecret creates space-separated field labels for FTS indexing
-func buildFieldLabelsForSecret(secret *model.SecretObject) string {
-	var result string
-	for i, field := range secret.Fields {
-		if i > 0 {
-			result += " "
-		}
-		result += field.Label
-	}
-	return result
 }
 
 // Delete removes a secret and its fields
