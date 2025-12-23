@@ -1,0 +1,40 @@
+export PATH="$PATH:."
+export PS1='keyp-demo:~$ '
+clear
+
+# Initialize a new vault
+keyp init
+    password: demo1234
+    confirm: demo1234
+
+# Store a simple secret
+keyp set github-token ghp_xxxxxxxxxxxx
+
+# Store a structured secret (multiple fields)
+keyp add "AT&T"
+    label: Account PIN
+    value: 1234
+    label: Support PIN
+    value: 5678
+    label: Email
+    value: billing@example.com
+    label: (just Enter)
+
+# List all secrets
+keyp list
+
+# View a structured secret
+keyp show "AT&T"
+
+# Copy to clipboard
+keyp get github-token
+
+# Search across everything
+keyp search "PIN"
+
+# Organize with tags
+keyp tag add "AT&T" telecom family
+keyp list
+
+# Lock when done
+keyp lock

@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/TheEditor/keyp/internal/model"
 	"github.com/TheEditor/keyp/internal/ui"
-	"github.com/TheEditor/keyp/internal/vault"
 )
 
 var addCmd = &cobra.Command{
@@ -24,18 +23,11 @@ func init() {
 func runAdd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	// Prompt for vault password
-	password, err := ui.PromptPassword("Enter vault password: ")
+	// Get or unlock vault
+	handle, err := getOrUnlockVault(cmd, 0)
 	if err != nil {
 		return err
 	}
-
-	// Open vault
-	v, err := vault.Open(getVaultPath(), password)
-	if err != nil {
-		return fmt.Errorf("failed to open vault: %w", err)
-	}
-	defer v.Close()
 
 	// Create new secret
 	secret := model.NewSecretObject(name)
@@ -61,7 +53,7 @@ func runAdd(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create secret
-	if err := v.Create(cmd.Context(), secret); err != nil {
+	if err := handle.Store().Create(cmd.Context(), secret); err != nil {
 		return fmt.Errorf("failed to create secret: %w", err)
 	}
 

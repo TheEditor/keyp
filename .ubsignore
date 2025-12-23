@@ -8,6 +8,8 @@ coverage/
 .idea/
 .beads/
 .claude/
+history/
+legacy/
 *.md
 *.json
 *.lock

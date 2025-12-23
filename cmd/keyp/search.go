@@ -5,8 +5,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/TheEditor/keyp/internal/ui"
-	"github.com/TheEditor/keyp/internal/vault"
 )
 
 var searchCmd = &cobra.Command{
@@ -24,21 +22,14 @@ func init() {
 func runSearch(cmd *cobra.Command, args []string) error {
 	query := args[0]
 
-	// Prompt for vault password
-	password, err := ui.PromptPassword("Enter vault password: ")
+	// Get or unlock vault
+	handle, err := getOrUnlockVault(cmd, 0)
 	if err != nil {
 		return err
 	}
 
-	// Open vault
-	v, err := vault.Open(getVaultPath(), password)
-	if err != nil {
-		return fmt.Errorf("failed to open vault: %w", err)
-	}
-	defer v.Close()
-
 	// Search secrets
-	secrets, err := v.Search(cmd.Context(), query, nil)
+	secrets, err := handle.Store().Search(cmd.Context(), query, nil)
 	if err != nil {
 		return fmt.Errorf("failed to search secrets: %w", err)
 	}

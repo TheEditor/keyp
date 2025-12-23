@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/TheEditor/keyp/internal/store"
 	"github.com/TheEditor/keyp/internal/ui"
-	"github.com/TheEditor/keyp/internal/vault"
 )
 
 var deleteForce bool
@@ -30,21 +29,14 @@ func init() {
 func runDelete(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	// Prompt for vault password
-	password, err := ui.PromptPassword("Enter vault password: ")
+	// Get or unlock vault
+	handle, err := getOrUnlockVault(cmd, 0)
 	if err != nil {
 		return err
 	}
 
-	// Open vault
-	v, err := vault.Open(getVaultPath(), password)
-	if err != nil {
-		return fmt.Errorf("failed to open vault: %w", err)
-	}
-	defer v.Close()
-
 	// Verify exists
-	_, err = v.GetByName(cmd.Context(), name)
+	_, err = handle.Store().GetByName(cmd.Context(), name)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return fmt.Errorf("secret '%s' not found", name)
@@ -64,7 +56,7 @@ func runDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	// Delete
-	if err := v.Delete(cmd.Context(), name); err != nil {
+	if err := handle.Store().Delete(cmd.Context(), name); err != nil {
 		return fmt.Errorf("failed to delete secret: %w", err)
 	}
 

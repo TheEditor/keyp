@@ -3,7 +3,9 @@ package sync
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -36,10 +38,21 @@ func (g *GitExecSyncer) git(args ...string) (string, error) {
 	return strings.TrimSpace(output), nil
 }
 
-// Init initializes a git repository in the vault directory
+// Init initializes a git repository in the vault directory and creates .gitignore
 func (g *GitExecSyncer) Init() error {
 	_, err := g.git("init")
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Create .gitignore to exclude SQLite database files
+	gitignorePath := filepath.Join(g.vaultPath, ".gitignore")
+	gitignoreContent := "# Exclude SQLite database files\n*.db\n*.db-journal\n*.db-wal\n*.db-shm\n"
+	if err := os.WriteFile(gitignorePath, []byte(gitignoreContent), 0644); err != nil {
+		return fmt.Errorf("failed to create .gitignore: %w", err)
+	}
+
+	return nil
 }
 
 // AddRemote adds a remote repository URL
@@ -48,10 +61,25 @@ func (g *GitExecSyncer) AddRemote(url string) error {
 	return err
 }
 
+// RemoveRemote removes a remote by name
+func (g *GitExecSyncer) RemoveRemote(name string) error {
+	_, err := g.git("remote", "remove", name)
+	return err
+}
+
+// GetRemoteURL returns the URL for a named remote
+func (g *GitExecSyncer) GetRemoteURL(name string) (string, error) {
+	url, err := g.git("remote", "get-url", name)
+	if err != nil {
+		return "", err
+	}
+	return url, nil
+}
+
 // Commit creates a commit with the given message
 func (g *GitExecSyncer) Commit(message string) error {
 	// First add all files
-	if _, err := g.git("add", "-A"); err != nil {
+	if _, err := g.git("add", "."); err != nil {
 		return err
 	}
 

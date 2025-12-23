@@ -11,7 +11,6 @@ import (
 	"github.com/TheEditor/keyp/internal/model"
 	"github.com/TheEditor/keyp/internal/store"
 	"github.com/TheEditor/keyp/internal/ui"
-	"github.com/TheEditor/keyp/internal/vault"
 )
 
 var setStdin bool
@@ -51,18 +50,11 @@ func runSet(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Prompt for vault password
-	password, err := ui.PromptPassword("Enter vault password: ")
+	// Get or unlock vault
+	handle, err := getOrUnlockVault(cmd, 0)
 	if err != nil {
 		return err
 	}
-
-	// Open vault
-	v, err := vault.Open(getVaultPath(), password)
-	if err != nil {
-		return fmt.Errorf("failed to open vault: %w", err)
-	}
-	defer v.Close()
 
 	// Create secret with single field
 	secret := model.NewSecretObject(name)
@@ -71,15 +63,15 @@ func runSet(cmd *cobra.Command, args []string) error {
 	secret.AddField(field)
 
 	// Try create, if exists then update
-	if err := v.Create(cmd.Context(), secret); err != nil {
+	if err := handle.Store().Create(cmd.Context(), secret); err != nil {
 		if errors.Is(err, store.ErrAlreadyExists) {
 			// Update existing
-			existing, err := v.GetByName(cmd.Context(), name)
+			existing, err := handle.Store().GetByName(cmd.Context(), name)
 			if err != nil {
 				return fmt.Errorf("failed to get existing secret: %w", err)
 			}
 			existing.Fields = secret.Fields
-			if err := v.Update(cmd.Context(), existing); err != nil {
+			if err := handle.Store().Update(cmd.Context(), existing); err != nil {
 				return fmt.Errorf("failed to update secret: %w", err)
 			}
 		} else {

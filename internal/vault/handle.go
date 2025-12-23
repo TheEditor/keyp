@@ -132,3 +132,40 @@ func (h *VaultHandle) SetTimeout(timeout time.Duration) {
 	defer h.mu.Unlock()
 	h.timeout = timeout
 }
+
+// GetDerivedKey returns the derived encryption key if unlocked, nil otherwise
+func (h *VaultHandle) GetDerivedKey() []byte {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	if h.key == nil {
+		return nil
+	}
+	// Return a copy to prevent external modification
+	keyCopy := make([]byte, len(h.key))
+	copy(keyCopy, h.key)
+	return keyCopy
+}
+
+// UnlockWithKey unlocks the vault using a pre-derived key instead of a password
+func (h *VaultHandle) UnlockWithKey(derivedKey []byte, timeout time.Duration) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	// Open the vault store directly with the derived key
+	st, err := store.Open(h.path)
+	if err != nil {
+		return err
+	}
+
+	// Store the derived key and update state
+	h.store = st
+	h.key = derivedKey
+	h.password = "" // No password when unlocking with key
+	h.unlockedAt = time.Now()
+
+	if timeout > 0 {
+		h.timeout = timeout
+	}
+
+	return nil
+}

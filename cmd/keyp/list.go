@@ -8,8 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/TheEditor/keyp/internal/store"
-	"github.com/TheEditor/keyp/internal/ui"
-	"github.com/TheEditor/keyp/internal/vault"
 )
 
 var (
@@ -32,18 +30,11 @@ func init() {
 }
 
 func runList(cmd *cobra.Command, args []string) error {
-	// Prompt for vault password
-	password, err := ui.PromptPassword("Enter vault password: ")
+	// Get or unlock vault
+	handle, err := getOrUnlockVault(cmd, 0)
 	if err != nil {
 		return err
 	}
-
-	// Open vault
-	v, err := vault.Open(getVaultPath(), password)
-	if err != nil {
-		return fmt.Errorf("failed to open vault: %w", err)
-	}
-	defer v.Close()
 
 	// Build SearchOptions for tag filtering
 	var opts *store.SearchOptions
@@ -52,7 +43,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	// List secrets
-	secrets, err := v.List(cmd.Context(), opts)
+	secrets, err := handle.Store().List(cmd.Context(), opts)
 	if err != nil {
 		return fmt.Errorf("failed to list secrets: %w", err)
 	}

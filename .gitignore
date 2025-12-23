@@ -48,3 +48,6 @@ legacy/lib/
 
 # AI planning documents (ephemeral)
 history/
+
+# bv (beads viewer) local config and caches
+.bv/

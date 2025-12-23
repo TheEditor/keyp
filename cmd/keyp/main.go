@@ -26,6 +26,26 @@ var rootCmd = &cobra.Command{
 	Short: "Local-first secret manager",
 	Long:  `keyp is a local-first secret manager for developers and families.
 Securely store structured secrets with full-text search.`,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// Skip auto-lock check for these commands
+		skipAutoLock := map[string]bool{
+			"init":    true,
+			"version": true,
+			"help":    true,
+		}
+
+		if skipAutoLock[cmd.Name()] {
+			return nil
+		}
+
+		// Check if vault handle exists and is expired
+		handle := getVaultHandle()
+		if handle != nil && handle.IsUnlocked() && handle.IsExpired() {
+			handle.Lock()
+		}
+
+		return nil
+	},
 }
 
 var versionCmd = &cobra.Command{

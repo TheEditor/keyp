@@ -1,0 +1,10 @@
+{"version":2,"width":68,"height":24,"timestamp":1766439233,"env":{"SHELL":"C:\\Program Files\\Git\\usr\\bin\\bash.exe","TERM":"xterm"}}
+[0.5363419055938721,"o","\u001b[2J\u001b[m\u001b[Hbash: lsb_release: command not found\r\n\u001b]0;C:\\Program Files\\Git\\usr\\bin\\bash.exe\u0007\u001b[?25h"]
+[0.5551972389221191,"o","Welcome to WSL Ubuntu \r\n"]
+[0.6101055145263672,"o","Date: Mon Dec 22 16:33:54 EST 2025\r\n"]
+[0.6537525653839111,"o","bash: uptime: command not found\r\n"]
+[0.6671648025512695,"o","\u001b[25lUptime:\u001b[7;1H\u001b[?25h"]
+[0.8279428482055664,"o","\u001b[?2004h[WSL] "]
+[0.842186450958252,"o","\r[WSL] \u001b[1m\u001b[92mdavef@DESKTOP-PH1OR54\u001b[m:\u001b[1m\u001b[94m~/Documents/Projects/Claude/Vibe Coding/\r\nkeyp\u001b[91m(main)\u001b[m$ \u001b[K"]
+[7.668365955352783,"o","\u001b[?2004l\r\n"]
+[7.68370246887207,"o","exit\r\n"]
