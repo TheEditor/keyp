@@ -61,6 +61,11 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 	setVaultHandle(handle)
 
+	// Save session to avoid prompting for password on subsequent commands
+	if derivedKey := handle.GetDerivedKey(); derivedKey != nil {
+		sessionMgr.Save(derivedKey)
+	}
+
 	fmt.Printf("Vault initialized at %s\n", path)
 	return nil
 }
