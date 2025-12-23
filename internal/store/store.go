@@ -89,7 +89,7 @@ func (s *Store) initSchema() error {
     );
 
     CREATE VIRTUAL TABLE IF NOT EXISTS secrets_fts USING fts5(
-        name, tags, notes, field_labels, content='secrets', content_rowid='rowid'
+        name, tags, notes, field_labels
     );
 
     CREATE TRIGGER IF NOT EXISTS secrets_ai AFTER INSERT ON secrets BEGIN
@@ -243,10 +243,27 @@ func (s *Store) Create(ctx context.Context, secret *model.SecretObject) error {
 	}
 
 	// Rebuild FTS entry with field labels after fields are inserted
+	// Get the rowid of the inserted secret
+	var rowid int64
+	err = tx.QueryRowContext(ctx, "SELECT rowid FROM secrets WHERE id = ?", secret.ID).Scan(&rowid)
+	if err != nil {
+		return err
+	}
+
+	// Delete old FTS entry if it exists
+	_, err = tx.ExecContext(ctx,
+		"INSERT INTO secrets_fts(secrets_fts, rowid, name, tags, notes, field_labels) VALUES ('delete', ?, '', '', '', '')",
+		rowid,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Insert new FTS entry with field labels
 	fieldLabels := buildFieldLabelsForSecret(secret)
 	_, err = tx.ExecContext(ctx,
-		"UPDATE secrets_fts SET field_labels = ? WHERE rowid = (SELECT rowid FROM secrets WHERE id = ?)",
-		fieldLabels, secret.ID,
+		"INSERT INTO secrets_fts(rowid, name, tags, notes, field_labels) VALUES (?, ?, ?, ?, ?)",
+		rowid, secret.Name, secret.TagsJSON(), secret.Notes, fieldLabels,
 	)
 	if err != nil {
 		return err
@@ -396,10 +413,27 @@ func (s *Store) Update(ctx context.Context, secret *model.SecretObject) error {
 	}
 
 	// Rebuild FTS entry with field labels after fields are inserted
+	// Get the rowid of the secret
+	var rowid int64
+	err = tx.QueryRowContext(ctx, "SELECT rowid FROM secrets WHERE id = ?", secret.ID).Scan(&rowid)
+	if err != nil {
+		return err
+	}
+
+	// Delete old FTS entry
+	_, err = tx.ExecContext(ctx,
+		"INSERT INTO secrets_fts(secrets_fts, rowid, name, tags, notes, field_labels) VALUES ('delete', ?, '', '', '', '')",
+		rowid,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Insert new FTS entry with field labels
 	fieldLabels := buildFieldLabelsForSecret(secret)
 	_, err = tx.ExecContext(ctx,
-		"UPDATE secrets_fts SET field_labels = ? WHERE rowid = (SELECT rowid FROM secrets WHERE id = ?)",
-		fieldLabels, secret.ID,
+		"INSERT INTO secrets_fts(rowid, name, tags, notes, field_labels) VALUES (?, ?, ?, ?, ?)",
+		rowid, secret.Name, secret.TagsJSON(), secret.Notes, fieldLabels,
 	)
 	if err != nil {
 		return err
