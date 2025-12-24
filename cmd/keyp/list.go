@@ -12,7 +12,6 @@ import (
 
 var (
 	listTags []string
-	listJSON bool
 )
 
 var listCmdObj = &cobra.Command{
@@ -25,7 +24,6 @@ var listCmdObj = &cobra.Command{
 
 func init() {
 	listCmdObj.Flags().StringSliceVar(&listTags, "tags", nil, "Filter by tags (comma-separated)")
-	listCmdObj.Flags().BoolVar(&listJSON, "json", false, "Output as JSON")
 	rootCmd.AddCommand(listCmdObj)
 }
 
@@ -49,7 +47,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	// Output
-	if listJSON {
+	if jsonOutput {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
 		return enc.Encode(secrets)

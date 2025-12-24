@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -39,6 +41,13 @@ func runShow(cmd *cobra.Command, args []string) error {
 	// Redact sensitive fields if not revealing
 	if !showReveal {
 		secret = secret.Redacted()
+	}
+
+	// JSON output
+	if jsonOutput {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		return enc.Encode(secret)
 	}
 
 	// Display secret details

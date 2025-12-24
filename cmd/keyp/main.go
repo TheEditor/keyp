@@ -14,6 +14,9 @@ import (
 
 var version = "2.0.0-dev"
 
+// Global flags
+var jsonOutput bool
+
 // getVaultPath returns the vault path from flag or default
 func getVaultPath() string {
 	// Check init command path flag
@@ -61,6 +64,7 @@ var versionCmd = &cobra.Command{
 }
 
 func init() {
+	rootCmd.PersistentFlags().BoolVar(&jsonOutput, "json", false, "Output results in JSON format")
 	rootCmd.AddCommand(versionCmd)
 }
 

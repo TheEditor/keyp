@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -34,13 +36,25 @@ func runSearch(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to search secrets: %w", err)
 	}
 
+	// JSON output
+	if jsonOutput {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		return enc.Encode(secrets)
+	}
+
 	// Display results
 	if len(secrets) == 0 {
-		fmt.Printf("No secrets found matching '%s'\n", query)
+		fmt.Printf("No secrets match '%s'\n", query)
 		return nil
 	}
 
-	fmt.Printf("Found %d secret(s) matching '%s':\n\n", len(secrets), query)
+	count := len(secrets)
+	secretWord := "secret"
+	if count > 1 {
+		secretWord = "secrets"
+	}
+	fmt.Printf("Found %d %s matching '%s':\n\n", count, secretWord, query)
 	fmt.Printf("%-30s %-20s %s\n", "NAME", "TAGS", "UPDATED")
 	for _, s := range secrets {
 		tags := strings.Join(s.Tags, ", ")

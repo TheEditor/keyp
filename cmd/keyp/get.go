@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/TheEditor/keyp/internal/store"
@@ -62,6 +64,14 @@ func runGet(cmd *cobra.Command, args []string) error {
 		value = secret.Fields[0].Value
 	} else {
 		return fmt.Errorf("secret has no fields")
+	}
+
+	// JSON output
+	if jsonOutput {
+		output := map[string]string{"value": value}
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		return enc.Encode(output)
 	}
 
 	// Output
