@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -84,7 +85,7 @@ func runTagAdd(cmd *cobra.Command, args []string) error {
 		if len(addedTags) == 1 {
 			fmt.Printf("Tag '%s' added to secret '%s'\n", addedTags[0], secretName)
 		} else {
-			fmt.Printf("Tags added to secret '%s': %v\n", secretName, addedTags)
+			fmt.Printf("Tags added to secret '%s': %s\n", secretName, strings.Join(addedTags, ", "))
 		}
 	}
 
