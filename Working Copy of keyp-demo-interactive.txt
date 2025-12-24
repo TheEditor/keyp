@@ -1,7 +1,8 @@
+rm -rf ~/.keyp
 go clean -cache
 CGO_ENABLED=1 go build -v -o keyp.exe ./cmd/keyp
 
-rm -rf ~/.keyp
+
 export PATH="$PATH:."
 export PS1='keyp-demo:~$ '
 clear
