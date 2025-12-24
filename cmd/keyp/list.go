@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	listTags []string
+	listTags     []string
+	listPorcelain bool
 )
 
 var listCmdObj = &cobra.Command{
@@ -24,6 +25,7 @@ var listCmdObj = &cobra.Command{
 
 func init() {
 	listCmdObj.Flags().StringSliceVar(&listTags, "tags", nil, "Filter by tags (comma-separated)")
+	listCmdObj.Flags().BoolVar(&listPorcelain, "porcelain", false, "Output tab-separated values (no headers)")
 	rootCmd.AddCommand(listCmdObj)
 }
 
@@ -51,6 +53,16 @@ func runList(cmd *cobra.Command, args []string) error {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
 		return enc.Encode(secrets)
+	}
+
+	// Porcelain output (tab-separated, no headers)
+	if listPorcelain {
+		for _, s := range secrets {
+			tags := strings.Join(s.Tags, ", ")
+			updated := s.UpdatedAt.Format("2006-01-02")
+			fmt.Printf("%s\t%s\t%s\n", s.Name, tags, updated)
+		}
+		return nil
 	}
 
 	// Table output
