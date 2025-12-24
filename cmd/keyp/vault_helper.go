@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/TheEditor/keyp/internal/config"
 	"github.com/TheEditor/keyp/internal/session"
 	"github.com/TheEditor/keyp/internal/ui"
 	"github.com/TheEditor/keyp/internal/vault"
@@ -14,7 +16,14 @@ var globalHandle *vault.VaultHandle
 var sessionMgr *session.Manager
 
 func init() {
-	sessionMgr = session.New(session.DefaultTimeout)
+	// Load configuration for session timeout
+	cfg, err := config.Load()
+	if err != nil {
+		log.Printf("warning: failed to load config: %v, using default session timeout", err)
+		sessionMgr = session.New(session.DefaultTimeout)
+	} else {
+		sessionMgr = session.New(cfg.SessionTimeout)
+	}
 }
 
 // getOrUnlockVault returns the vault handle, unlocking if necessary
