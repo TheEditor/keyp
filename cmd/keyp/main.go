@@ -33,6 +33,8 @@ var rootCmd = &cobra.Command{
 	Short: "Local-first secret manager",
 	Long:  `keyp is a local-first secret manager for developers and families.
 Securely store structured secrets with full-text search.`,
+	SilenceUsage:  true,
+	SilenceErrors: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// Skip auto-lock check for these commands
 		skipAutoLock := map[string]bool{

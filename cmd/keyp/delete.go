@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/TheEditor/keyp/internal/color"
 	"github.com/TheEditor/keyp/internal/store"
 	"github.com/TheEditor/keyp/internal/ui"
 )
@@ -39,7 +40,7 @@ func runDelete(cmd *cobra.Command, args []string) error {
 	_, err = handle.Store().GetByName(cmd.Context(), name)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return fmt.Errorf("secret '%s' not found", name)
+			return fmt.Errorf("secret '%s' not found: %w", name, err)
 		}
 		return fmt.Errorf("failed to get secret: %w", err)
 	}
@@ -60,6 +61,7 @@ func runDelete(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to delete secret: %w", err)
 	}
 
-	fmt.Printf("Secret '%s' deleted\n", name)
+	msg := fmt.Sprintf("Secret '%s' deleted", name)
+	fmt.Println(color.Success(msg))
 	return nil
 }

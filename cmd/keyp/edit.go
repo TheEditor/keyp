@@ -4,10 +4,12 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/TheEditor/keyp/internal/color"
 	"github.com/TheEditor/keyp/internal/ui"
 )
 
 var editField string
+var editNotes string
 
 var editCmd = &cobra.Command{
 	Use:   "edit <name>",
@@ -19,6 +21,7 @@ var editCmd = &cobra.Command{
 
 func init() {
 	editCmd.Flags().StringVar(&editField, "field", "", "Specific field to edit (by label)")
+	editCmd.Flags().StringVar(&editNotes, "notes", "", "Update notes for the secret")
 	rootCmd.AddCommand(editCmd)
 }
 
@@ -75,11 +78,17 @@ func runEdit(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Update notes if provided
+	if editNotes != "" {
+		secret.Notes = editNotes
+	}
+
 	// Update secret
 	if err := handle.Store().Update(cmd.Context(), secret); err != nil {
 		return fmt.Errorf("failed to update secret: %w", err)
 	}
 
-	fmt.Printf("Secret '%s' updated\n", name)
+	msg := fmt.Sprintf("Secret '%s' updated", name)
+	fmt.Println(color.Success(msg))
 	return nil
 }

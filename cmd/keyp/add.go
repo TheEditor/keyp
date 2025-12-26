@@ -4,9 +4,12 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/TheEditor/keyp/internal/color"
 	"github.com/TheEditor/keyp/internal/model"
 	"github.com/TheEditor/keyp/internal/ui"
 )
+
+var addNotes string
 
 var addCmd = &cobra.Command{
 	Use:   "add <name>",
@@ -17,6 +20,7 @@ var addCmd = &cobra.Command{
 }
 
 func init() {
+	addCmd.Flags().StringVar(&addNotes, "notes", "", "Optional notes for the secret")
 	rootCmd.AddCommand(addCmd)
 }
 
@@ -31,6 +35,9 @@ func runAdd(cmd *cobra.Command, args []string) error {
 
 	// Create new secret
 	secret := model.NewSecretObject(name)
+	if addNotes != "" {
+		secret.Notes = addNotes
+	}
 
 	// Prompt for fields
 	fmt.Println("Enter fields (empty label to finish):")
@@ -57,6 +64,7 @@ func runAdd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create secret: %w", err)
 	}
 
-	fmt.Printf("Secret '%s' created with %d field(s)\n", name, len(secret.Fields))
+	msg := fmt.Sprintf("Secret '%s' created with %d field(s)", name, len(secret.Fields))
+	fmt.Println(color.Success(msg))
 	return nil
 }

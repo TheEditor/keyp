@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/TheEditor/keyp/internal/color"
 	"github.com/TheEditor/keyp/internal/store"
 	"github.com/TheEditor/keyp/internal/ui"
 )
@@ -43,7 +44,7 @@ func runGet(cmd *cobra.Command, args []string) error {
 	secret, err := handle.Store().GetByName(cmd.Context(), name)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return fmt.Errorf("secret '%s' not found", name)
+			return fmt.Errorf("secret '%s' not found: %w", name, err)
 		}
 		return fmt.Errorf("failed to get secret: %w", err)
 	}
@@ -71,6 +72,7 @@ func runGet(cmd *cobra.Command, args []string) error {
 		output := map[string]string{"value": value}
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
+		enc.SetEscapeHTML(false)
 		return enc.Encode(output)
 	}
 
@@ -81,7 +83,7 @@ func runGet(cmd *cobra.Command, args []string) error {
 		if err := ui.CopyWithAutoClear(value, ui.DefaultClearDuration); err != nil {
 			return fmt.Errorf("failed to copy to clipboard: %w", err)
 		}
-		fmt.Printf("Copied to clipboard (clears in 45s)\n")
+		fmt.Println(color.Success("Copied to clipboard (clears in 45s)"))
 	}
 
 	return nil

@@ -47,6 +47,7 @@ func runShow(cmd *cobra.Command, args []string) error {
 	if jsonOutput {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
+		enc.SetEscapeHTML(false)
 		return enc.Encode(secret)
 	}
 

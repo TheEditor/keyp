@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/TheEditor/keyp/internal/color"
 	"github.com/TheEditor/keyp/internal/store"
 )
 
@@ -52,6 +53,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	if jsonOutput {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
+		enc.SetEscapeHTML(false)
 		return enc.Encode(secrets)
 	}
 
@@ -71,7 +73,11 @@ func runList(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	fmt.Printf("%-30s %-20s %s\n", "NAME", "TAGS", "UPDATED")
+	// Print colored header
+	header := fmt.Sprintf("%-30s %-20s %s", "NAME", "TAGS", "UPDATED")
+	fmt.Println(color.Header(header))
+
+	// Print rows
 	for _, s := range secrets {
 		tags := strings.Join(s.Tags, ", ")
 		updated := s.UpdatedAt.Format("2006-01-02 15:04")

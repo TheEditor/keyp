@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/TheEditor/keyp/internal/vault"
+	"github.com/TheEditor/keyp/internal/color"
 )
 
 var lockCmd = &cobra.Command{
@@ -19,14 +19,9 @@ func init() {
 }
 
 func runLock(cmd *cobra.Command, args []string) error {
-	vaultPath := getVaultPath()
+	// Clear the global handle and session file
+	clearVaultHandle()
 
-	// Create handle
-	handle := vault.NewHandle(vaultPath)
-
-	// Lock
-	handle.Lock()
-
-	fmt.Println("Vault locked")
+	fmt.Println(color.Success("Vault locked"))
 	return nil
 }

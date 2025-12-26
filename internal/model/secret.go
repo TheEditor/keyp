@@ -12,8 +12,8 @@ type SecretObject struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`
 	Tags      []string  `json:"tags"`
-	Fields    []Field   `json:"fields"`
-	Notes     string    `json:"notes"`
+	Fields    []Field   `json:"fields,omitempty"`
+	Notes     string    `json:"notes,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
