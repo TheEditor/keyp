@@ -26,11 +26,13 @@
 
 ---
 
-## Issue Tracking with bd (beads)
+## Issue Tracking with br (beads_rust)
 
-**IMPORTANT**: This project uses **bd (beads)** for ALL issue tracking. Do NOT use markdown TODOs, task lists, or other tracking methods.
+**Note:** `br` is non-invasive and never executes git commands. After `br sync --flush-only`, you must manually run `git add .beads/ && git commit`.
 
-### Why bd?
+**IMPORTANT**: This project uses **br (beads_rust)** for ALL issue tracking. Do NOT use markdown TODOs, task lists, or other tracking methods.
+
+### Why br?
 
 - Dependency-aware: Track blockers and relationships between issues
 - Git-friendly: Auto-syncs to JSONL for version control
@@ -41,25 +43,25 @@
 
 **Check for ready work:**
 ```bash
-bd ready --json
+br ready --json
 ```
 
 **Create new issues:**
 ```bash
-bd create "Issue title" -t bug|feature|task -p 0-4 --json
-bd create "Issue title" -p 1 --deps discovered-from:bd-123 --json
-bd create "Subtask" --parent <epic-id> --json  # Hierarchical subtask (gets ID like epic-id.1)
+br create "Issue title" -t bug|feature|task -p 0-4 --json
+br create "Issue title" -p 1 --deps discovered-from:br-123 --json
+br create "Subtask" --parent <epic-id> --json  # Hierarchical subtask (gets ID like epic-id.1)
 ```
 
 **Claim and update:**
 ```bash
-bd update bd-42 --status in_progress --json
-bd update bd-42 --priority 1 --json
+br update br-42 --status in_progress --json
+br update br-42 --priority 1 --json
 ```
 
 **Complete work:**
 ```bash
-bd close bd-42 --reason "Completed" --json
+br close br-42 --reason "Completed" --json
 ```
 
 ### Issue Types
@@ -80,17 +82,17 @@ bd close bd-42 --reason "Completed" --json
 
 ### Workflow for AI Agents
 
-1. **Check ready work**: `bd ready` shows unblocked issues
-2. **Claim your task**: `bd update <id> --status in_progress`
+1. **Check ready work**: `br ready` shows unblocked issues
+2. **Claim your task**: `br update <id> --status in_progress`
 3. **Work on it**: Implement, test, document
 4. **Discover new work?** Create linked issue:
-   - `bd create "Found bug" -p 1 --deps discovered-from:<parent-id>`
-5. **Complete**: `bd close <id> --reason "Done"`
+   - `br create "Found bug" -p 1 --deps discovered-from:<parent-id>`
+5. **Complete**: `br close <id> --reason "Done"`
 6. **Commit together**: Always commit the `.beads/issues.jsonl` file together with the code changes so issue state stays in sync with code state
 
 ### Auto-Sync
 
-bd automatically syncs with git:
+br automatically syncs with git:
 - Exports to `.beads/issues.jsonl` after changes (5s debounce)
 - Imports from JSONL when newer (e.g., after `git pull`)
 - No manual export/import needed!
@@ -112,17 +114,17 @@ AI assistants often create planning and design documents during development:
 
 ### CLI Help
 
-Run `bd <command> --help` to see all available flags for any command.
-For example: `bd create --help` shows `--parent`, `--deps`, `--assignee`, etc.
+Run `br <command> --help` to see all available flags for any command.
+For example: `br create --help` shows `--parent`, `--deps`, `--assignee`, etc.
 
 ### Important Rules
 
-- ✅ Use bd for ALL task tracking
+- ✅ Use br for ALL task tracking
 - ✅ Always use `--json` flag for programmatic use
 - ✅ Link discovered work with `discovered-from` dependencies
-- ✅ Check `bd ready` before asking "what should I work on?"
+- ✅ Check `br ready` before asking "what should I work on?"
 - ✅ Store AI planning docs in `history/` directory
-- ✅ Run `bd <cmd> --help` to discover available flags
+- ✅ Run `br <cmd> --help` to discover available flags
 - ❌ Do NOT create markdown TODO lists
 - ❌ Do NOT use external issue trackers
 - ❌ Do NOT duplicate tracking systems
@@ -132,15 +134,18 @@ For example: `bd create --help` shows `--parent`, `--deps`, `--assignee`, etc.
 
 ### Understanding Beads ID Assignment
 
+**Note:** `br` is non-invasive and never executes git commands. After `br sync --flush-only`, you must manually run `git add .beads/ && git commit`.
+
 **CRITICAL CONCEPT**: Beads assigns issue IDs automatically. You CANNOT specify them.
 
 #### When Creating Issues
 
 ```bash
 # You run this command:
-bd create "Implement SQLCipher storage layer" -t task -p 0 -d "Description..." --json
+br create "Implement SQLCipher storage layer" -t task -p 0 -d "Description..." --json
 
 # Beads returns JSON like this:
+
 {"id":"keyp-008","title":"Implement SQLCipher storage layer",...}
 
 # The ID "keyp-008" was ASSIGNED by the system
@@ -151,7 +156,7 @@ bd create "Implement SQLCipher storage layer" -t task -p 0 -d "Description..." -
 
 When task specs show commands like:
 ```bash
-bd create "Task" -t task -p 0 --parent keyp-001 -d "..." --json
+br create "Task" -t task -p 0 --parent keyp-001 -d "..." --json
 ```
 
 The `keyp-001` is a **placeholder**. Replace it with the **actual ID** returned from the parent epic creation.
@@ -164,14 +169,14 @@ The `keyp-001` is a **placeholder**. Replace it with the **actual ID** returned 
 
 1. **Check ready work**:
    ```bash
-   bd ready --json
+   br ready --json
    ```
 
 2. **Pick an issue**: Choose based on priority (P0 = highest, P3 = lowest)
 
 3. **Update status**:
    ```bash
-   bd update <issue-id> --status in_progress
+   br update <issue-id> --status in_progress
    ```
 
 4. **Do the work**: Implement according to the task spec or issue description
@@ -180,13 +185,13 @@ The `keyp-001` is a **placeholder**. Replace it with the **actual ID** returned 
 
 - **Discovered new work?** File an issue immediately:
   ```bash
-  bd create "Found bug in crypto" -t bug -p 1 --json
-  bd dep add <new-issue-id> <current-issue-id> --type discovered-from
+  br create "Found bug in crypto" -t bug -p 1 --json
+  br dep add <new-issue-id> <current-issue-id> --type discovered-from
   ```
 
 - **Need to check dependencies?**
   ```bash
-  bd dep tree <issue-id>
+  br dep tree <issue-id>
   ```
 
 #### Completing Work
@@ -202,13 +207,13 @@ The `keyp-001` is a **placeholder**. Replace it with the **actual ID** returned 
 3. **Commit your work**:
    ```bash
    git add .
-   git commit -m "feat: implement feature (bd:<issue-id>)"
+   git commit -m "feat: implement feature (br:<issue-id>)"
    git push
    ```
 
 4. **Close the issue**:
    ```bash
-   bd close <issue-id> --reason "Implemented and tested"
+   br close <issue-id> --reason "Implemented and tested"
    ```
 
 ---
@@ -220,9 +225,9 @@ The `keyp-001` is a **placeholder**. Replace it with the **actual ID** returned 
 #### 1. Issue Tracker Hygiene
 
 - [ ] File issues for any discovered bugs, TODOs, or follow-up work
-- [ ] Close all completed issues with `bd close <issue-id>`
+- [ ] Close all completed issues with `br close <issue-id>`
 - [ ] Update status for any in-progress work
-- [ ] Run `bd ready` to confirm state
+- [ ] Run `br ready` to confirm state
 
 #### 2. Quality Gates
 
@@ -233,7 +238,7 @@ The `keyp-001` is a **placeholder**. Replace it with the **actual ID** returned 
 #### 3. Sync Issue Tracker
 
 ```bash
-bd sync
+br sync --flush-only
 git add .beads/
 git commit -m "chore: sync issue tracker"
 git push
@@ -477,16 +482,16 @@ Cross-compilation requires appropriate C toolchains or Docker-based builds.
 Follow Conventional Commits with Beads reference:
 
 ```
-<type>(<scope>): <description> (bd:<issue-id>)
+<type>(<scope>): <description> (br:<issue-id>)
 ```
 
 **Types**: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `perf`
 
 **Examples**:
 ```bash
-git commit -m "feat(core): port AES-256-GCM encryption from TypeScript (bd:keyp-003)"
-git commit -m "feat(store): implement SQLCipher storage layer (bd:keyp-004)"
-git commit -m "test(core): add crypto round-trip tests (bd:keyp-003)"
+git commit -m "feat(core): port AES-256-GCM encryption from TypeScript (br:keyp-003)"
+git commit -m "feat(store): implement SQLCipher storage layer (br:keyp-004)"
+git commit -m "test(core): add crypto round-trip tests (br:keyp-003)"
 ```
 
 ---
@@ -499,19 +504,19 @@ Work is organized via task manifests (see TASK-MANIFESTS.md). The current manife
 ### Using Manifests
 
 1. Read the manifest to understand scope and dependencies
-2. Create issues in Beads using `bd create` with descriptions you compose
+2. Create issues in Beads using `br create` with descriptions you compose
 3. Replace `<TBD>` placeholders with returned IDs
-4. Add dependencies using `bd dep add`
-5. Work through issues: `bd ready` → `bd show <id>` → implement → `bd close <id>`
-6. When `bd ready --json` returns empty, phase is complete
+4. Add dependencies using `br dep add`
+5. Work through issues: `br ready` → `br show <id>` → implement → `br close <id>`
+6. When `br ready --json` returns empty, phase is complete
 
 ### Common Pitfalls
 
 ❌ **DON'T**: Use example IDs from manifest (keyp-001, etc.)
-✅ **DO**: Use actual IDs returned by bd create
+✅ **DO**: Use actual IDs returned by br create
 
 ❌ **DON'T**: Forget to close issues when done
-✅ **DO**: Run `bd close <issue-id>` immediately after completing
+✅ **DO**: Run `br close <issue-id>` immediately after completing
 
 ❌ **DON'T**: Skip the bd-issue-tracking skill
 ✅ **DO**: Read it first, every time
@@ -557,19 +562,21 @@ require (
 
 ### Beads Commands Reference
 
+**Note:** `br` is non-invasive and never executes git commands. After `br sync --flush-only`, you must manually run `git add .beads/ && git commit`.
+
 ```bash
-bd help                    # General help
-bd ready                   # Show ready work
-bd show <issue-id>         # Show issue details
-bd list --status open      # List open issues
-bd dep tree <issue-id>     # Show dependency tree
+br help                    # General help
+br ready                   # Show ready work
+br show <issue-id>         # Show issue details
+br list --status open      # List open issues
+br dep tree <issue-id>     # Show dependency tree
 ```
 
 ### When Stuck
 
 1. Read the task spec - implementation details are there
-2. Check issue description - `bd show <issue-id>`
-3. Check dependencies - `bd dep tree <issue-id>`
+2. Check issue description - `br show <issue-id>`
+3. Check dependencies - `br dep tree <issue-id>`
 4. Review the bd-issue-tracking skill
 5. Ask the human when genuinely blocked
 
@@ -580,9 +587,9 @@ bd dep tree <issue-id>     # Show dependency tree
 1. **Read bd-issue-tracking skill FIRST** - Every session
 2. **Read keyp-cli-manifest.md** - Understand current work scope
 3. **Capture actual IDs** - Never use placeholder IDs from manifests
-4. **Close issues when done** - Verify with `bd ready`
+4. **Close issues when done** - Verify with `br ready`
 5. **CGO_ENABLED=1** - Required for SQLCipher builds
-6. **Include issue ID in commits** - `(bd:<issue-id>)` format
+6. **Include issue ID in commits** - `(br:<issue-id>)` format
 7. **VaultHandle is shared** - CLI and HTTP server both use it (Phase 6)
 ---
 
@@ -645,7 +652,9 @@ Parse: `file:line:col` → location | 💡 → how to fix | Exit 0/1 → pass/fa
 
 ## Beads Workflow Integration
 
-This project uses [beads_viewer](https://github.com/Dicklesworthstone/beads_viewer) for issue tracking. Issues are stored in `.beads/` and tracked in git.
+**Note:** `br` is non-invasive and never executes git commands. After `br sync --flush-only`, you must manually run `git add .beads/ && git commit`.
+
+This project uses [beads_rust](https://github.com/Dicklesworthstone/beads_rust_viewer) for issue tracking. Issues are stored in `.beads/` and tracked in git.
 
 ### Essential Commands
 
@@ -654,30 +663,34 @@ This project uses [beads_viewer](https://github.com/Dicklesworthstone/beads_view
 bv
 
 # CLI commands for agents (use these instead)
-bd ready              # Show issues ready to work (no blockers)
-bd list --status=open # All open issues
-bd show <id>          # Full issue details with dependencies
-bd create --title="..." --type=task --priority=2
-bd update <id> --status=in_progress
-bd close <id> --reason="Completed"
-bd close <id1> <id2>  # Close multiple issues at once
-bd sync               # Commit and push changes
+br ready              # Show issues ready to work (no blockers)
+br list --status=open # All open issues
+br show <id>          # Full issue details with dependencies
+br create --title="..." --type=task --priority=2
+br update <id> --status=in_progress
+br close <id> --reason="Completed"
+br close <id1> <id2>  # Close multiple issues at once
+br sync --flush-only               # Commit and push changes
+git add .beads/
+git commit -m "sync beads"
 ```
 
 ### Workflow Pattern
 
-1. **Start**: Run `bd ready` to find actionable work
-2. **Claim**: Use `bd update <id> --status=in_progress`
+1. **Start**: Run `br ready` to find actionable work
+2. **Claim**: Use `br update <id> --status=in_progress`
 3. **Work**: Implement the task
-4. **Complete**: Use `bd close <id>`
-5. **Sync**: Always run `bd sync` at session end
+4. **Complete**: Use `br close <id>`
+5. **Sync**: Always run `br sync --flush-only` at session end
+git add .beads/
+git commit -m "sync beads"
 
 ### Key Concepts
 
-- **Dependencies**: Issues can block other issues. `bd ready` shows only unblocked work.
+- **Dependencies**: Issues can block other issues. `br ready` shows only unblocked work.
 - **Priority**: P0=critical, P1=high, P2=medium, P3=low, P4=backlog (use numbers, not words)
 - **Types**: task, bug, feature, epic, question, docs
-- **Blocking**: `bd dep add <issue> <depends-on>` to add dependencies
+- **Blocking**: `br dep add <issue> <depends-on>` to add dependencies
 
 ### Session Protocol
 
@@ -686,18 +699,23 @@ bd sync               # Commit and push changes
 ```bash
 git status              # Check what changed
 git add <files>         # Stage code changes
-bd sync                 # Commit beads changes
+br sync --flush-only                 # Commit beads changes
+git add .beads/
 git commit -m "..."     # Commit code
-bd sync                 # Commit any new beads changes
+br sync --flush-only                 # Commit any new beads changes
+git add .beads/
+git commit -m "sync beads"
 git push                # Push to remote
 ```
 
 ### Best Practices
 
-- Check `bd ready` at session start to find available work
+- Check `br ready` at session start to find available work
 - Update status as you work (in_progress → closed)
-- Create new issues with `bd create` when you discover tasks
+- Create new issues with `br create` when you discover tasks
 - Use descriptive titles and set appropriate priority/type
-- Always `bd sync` before ending session
+- Always `br sync --flush-only` before ending session
+git add .beads/
+git commit -m "sync beads"
 
 <!-- end-bv-agent-instructions -->

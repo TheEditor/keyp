@@ -1,8 +1,8 @@
 # GitHub Copilot Instructions
 
-## Issue Tracking with bd
+## Issue Tracking with br
 
-This project uses **bd (beads)** for issue tracking - a Git-backed tracker designed for AI-supervised coding workflows.
+This project uses **br (beads_rust)** for issue tracking - a Git-backed tracker designed for AI-supervised coding workflows.
 
 **Key Features:**
 - Dependency-aware issue tracking
@@ -11,37 +11,41 @@ This project uses **bd (beads)** for issue tracking - a Git-backed tracker desig
 - Built-in daemon for background operations
 - MCP server integration for Claude and other AI assistants
 
-**CRITICAL**: Use bd for ALL task tracking. Do NOT create markdown TODO lists.
+**CRITICAL**: Use br for ALL task tracking. Do NOT create markdown TODO lists.
 
 ### Essential Commands
 
 ```bash
 # Find work
-bd ready --json                    # Unblocked issues
-bd stale --days 30 --json          # Forgotten issues
+br ready --json                    # Unblocked issues
+br stale --days 30 --json          # Forgotten issues
 
 # Create and manage
-bd create "Title" -t bug|feature|task -p 0-4 --json
-bd create "Subtask" --parent <epic-id> --json  # Hierarchical subtask
-bd update <id> --status in_progress --json
-bd close <id> --reason "Done" --json
+br create "Title" -t bug|feature|task -p 0-4 --json
+br create "Subtask" --parent <epic-id> --json  # Hierarchical subtask
+br update <id> --status in_progress --json
+br close <id> --reason "Done" --json
 
 # Search
-bd list --status open --priority 1 --json
-bd show <id> --json
+br list --status open --priority 1 --json
+br show <id> --json
 
 # Sync (CRITICAL at end of session!)
-bd sync  # Force immediate export/commit/push
+br sync --flush-only  # Force immediate export/commit/push
+git add .beads/
+git commit -m "sync beads"
 ```
 
 ### Workflow
 
-1. **Check ready work**: `bd ready --json`
-2. **Claim task**: `bd update <id> --status in_progress`
+1. **Check ready work**: `br ready --json`
+2. **Claim task**: `br update <id> --status in_progress`
 3. **Work on it**: Implement, test, document
-4. **Discover new work?** `bd create "Found bug" -p 1 --deps discovered-from:<parent-id> --json`
-5. **Complete**: `bd close <id> --reason "Done" --json`
-6. **Sync**: `bd sync` (flushes changes to git immediately)
+4. **Discover new work?** `br create "Found bug" -p 1 --deps discovered-from:<parent-id> --json`
+5. **Complete**: `br close <id> --reason "Done" --json`
+6. **Sync**: `br sync --flush-only` (flushes changes to git immediately)
+git add .beads/
+git commit -m "sync beads"
 
 ### Priorities
 
@@ -54,8 +58,9 @@ bd sync  # Force immediate export/commit/push
 ### Git Workflow
 
 - Always commit `.beads/issues.jsonl` with code changes
-- Run `bd sync` at end of work sessions
-- Install git hooks: `bd hooks install` (ensures DB ↔ JSONL consistency)
+- Run `br sync --flush-only` at end of work sessions
+git add .beads/
+git commit -m "sync beads"
 
 ### MCP Server (Recommended)
 
@@ -65,14 +70,16 @@ For MCP-compatible clients (Claude Desktop, etc.), install the beads MCP server:
 
 ## CLI Help
 
-Run `bd <command> --help` to see all available flags for any command.
-For example: `bd create --help` shows `--parent`, `--deps`, `--assignee`, etc.
+Run `br <command> --help` to see all available flags for any command.
+For example: `br create --help` shows `--parent`, `--deps`, `--assignee`, etc.
 
 ## Important Rules
 
-- ✅ Use bd for ALL task tracking
+- ✅ Use br for ALL task tracking
 - ✅ Always use `--json` flag for programmatic use
-- ✅ Run `bd sync` at end of sessions
-- ✅ Run `bd <cmd> --help` to discover available flags
+- ✅ Run `br sync --flush-only` at end of sessions
+git add .beads/
+git commit -m "sync beads"
+- ✅ Run `br <cmd> --help` to discover available flags
 - ❌ Do NOT create markdown TODO lists
 - ❌ Do NOT commit `.beads/beads.db` (JSONL only)
