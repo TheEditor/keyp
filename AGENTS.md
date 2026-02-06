@@ -30,6 +30,8 @@
 
 **Note:** `br` is non-invasive and never executes git commands. After `br sync --flush-only`, you must manually run `git add .beads/ && git commit`.
 
+**Legacy IDs:** Existing issues may still use `bd-*` IDs. New issues use `keyp-*`.
+
 **IMPORTANT**: This project uses **br (beads_rust)** for ALL issue tracking. Do NOT use markdown TODOs, task lists, or other tracking methods.
 
 ### Why br?
